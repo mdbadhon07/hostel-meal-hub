@@ -1,5 +1,5 @@
 import { useMeal } from '@/context/MealContext';
-import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus, Wallet } from 'lucide-react';
 
 export default function Reports() {
   const { getMonthlyStats, getMemberSummaries } = useMeal();
@@ -7,7 +7,7 @@ export default function Reports() {
   const summaries = getMemberSummaries();
 
   const today = new Date();
-  const bengaliMonths = ['জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন', 
+  const bengaliMonths = ['জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন',
                          'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'];
   const currentMonth = bengaliMonths[today.getMonth()];
 
@@ -27,9 +27,19 @@ export default function Reports() {
             <p className="text-sm text-muted-foreground">মোট মিল</p>
             <p className="text-2xl font-bold text-foreground">{monthlyStats.totalMeals}</p>
           </div>
-          <div className="bg-muted/50 rounded-lg p-4">
+          <div className="bg-warning/10 rounded-lg p-4">
             <p className="text-sm text-muted-foreground">মোট খরচ</p>
-            <p className="text-2xl font-bold text-foreground">{formatTaka(monthlyStats.totalExpenses)}</p>
+            <p className="text-2xl font-bold text-warning">{formatTaka(monthlyStats.totalExpenses)}</p>
+          </div>
+          <div className="bg-success/10 rounded-lg p-4">
+            <p className="text-sm text-muted-foreground">মোট জমা</p>
+            <p className="text-2xl font-bold text-success">{formatTaka(monthlyStats.totalDeposits)}</p>
+          </div>
+          <div className="bg-muted/50 rounded-lg p-4">
+            <p className="text-sm text-muted-foreground">ক্যাশ ব্যালেন্স</p>
+            <p className={`text-2xl font-bold ${monthlyStats.totalDeposits - monthlyStats.totalExpenses >= 0 ? 'text-success' : 'text-destructive'}`}>
+              {formatTaka(monthlyStats.totalDeposits - monthlyStats.totalExpenses)}
+            </p>
           </div>
           <div className="bg-primary/10 rounded-lg p-4 col-span-2">
             <p className="text-sm text-muted-foreground">মিল রেট</p>
@@ -49,12 +59,11 @@ export default function Reports() {
         </div>
         
         {/* Table Header - Desktop */}
-        <div className="hidden lg:grid lg:grid-cols-7 gap-2 p-4 bg-muted text-sm font-semibold text-muted-foreground">
+        <div className="hidden lg:grid lg:grid-cols-8 gap-2 p-4 bg-muted text-sm font-semibold text-muted-foreground">
           <div className="col-span-2">নাম</div>
-          <div className="text-center">দুপুর</div>
-          <div className="text-center">রাত</div>
           <div className="text-center">মোট মিল</div>
           <div className="text-right">খরচ</div>
+          <div className="text-right">জমা</div>
           <div className="text-right">ব্যালেন্স</div>
         </div>
 
@@ -87,36 +96,33 @@ export default function Reports() {
                     </div>
                   </div>
                   <div className="grid grid-cols-4 gap-2 text-center">
-                    <div className="bg-muted/50 rounded-lg p-2">
-                      <p className="text-lg font-bold">{summary.totalLunch}</p>
-                      <p className="text-xs text-muted-foreground">দুপুর</p>
-                    </div>
-                    <div className="bg-muted/50 rounded-lg p-2">
-                      <p className="text-lg font-bold">{summary.totalDinner}</p>
-                      <p className="text-xs text-muted-foreground">রাত</p>
-                    </div>
                     <div className="bg-primary/10 rounded-lg p-2">
                       <p className="text-lg font-bold text-primary">{summary.totalMeals}</p>
-                      <p className="text-xs text-muted-foreground">মোট</p>
+                      <p className="text-xs text-muted-foreground">মোট মিল</p>
                     </div>
-                    <div className="bg-muted/50 rounded-lg p-2">
-                      <p className="text-lg font-bold">{formatTaka(summary.totalCost)}</p>
+                    <div className="bg-warning/10 rounded-lg p-2">
+                      <p className="text-lg font-bold text-warning">{formatTaka(summary.totalCost)}</p>
                       <p className="text-xs text-muted-foreground">খরচ</p>
                     </div>
-                  </div>
-                  <div className="mt-3 flex justify-between text-sm text-muted-foreground">
-                    <span>দিয়েছে: {formatTaka(summary.totalPaid)}</span>
-                    <span>খরচ: {formatTaka(summary.totalCost)}</span>
+                    <div className="bg-success/10 rounded-lg p-2">
+                      <p className="text-lg font-bold text-success">{formatTaka(summary.totalDeposit)}</p>
+                      <p className="text-xs text-muted-foreground">জমা</p>
+                    </div>
+                    <div className={`rounded-lg p-2 ${summary.balance >= 0 ? 'bg-success/10' : 'bg-destructive/10'}`}>
+                      <p className={`text-lg font-bold ${summary.balance >= 0 ? 'text-success' : 'text-destructive'}`}>
+                        {summary.balance >= 0 ? '+' : ''}{formatTaka(summary.balance)}
+                      </p>
+                      <p className="text-xs text-muted-foreground">ব্যালেন্স</p>
+                    </div>
                   </div>
                 </div>
 
                 {/* Desktop Layout */}
-                <div className="hidden lg:grid lg:grid-cols-7 gap-2 items-center">
+                <div className="hidden lg:grid lg:grid-cols-6 gap-2 items-center">
                   <div className="col-span-2 font-medium">{summary.name}</div>
-                  <div className="text-center">{summary.totalLunch}</div>
-                  <div className="text-center">{summary.totalDinner}</div>
                   <div className="text-center font-semibold text-primary">{summary.totalMeals}</div>
-                  <div className="text-right">{formatTaka(summary.totalCost)}</div>
+                  <div className="text-right text-warning">{formatTaka(summary.totalCost)}</div>
+                  <div className="text-right text-success">{formatTaka(summary.totalDeposit)}</div>
                   <div className={`text-right font-semibold flex items-center justify-end gap-1 ${
                     summary.balance > 0 
                       ? 'text-success' 

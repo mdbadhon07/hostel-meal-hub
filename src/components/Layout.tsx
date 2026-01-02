@@ -7,7 +7,8 @@ import {
   Users, 
   BarChart3,
   Menu,
-  X
+  X,
+  Wallet
 } from 'lucide-react';
 
 interface LayoutProps {
@@ -18,6 +19,7 @@ const navItems = [
   { path: '/', label: 'ড্যাশবোর্ড', icon: LayoutDashboard },
   { path: '/daily-meal', label: 'দৈনিক মিল', icon: CalendarDays },
   { path: '/expenses', label: 'খরচ', icon: Receipt },
+  { path: '/deposits', label: 'জমা', icon: Wallet },
   { path: '/members', label: 'সদস্য', icon: Users },
   { path: '/reports', label: 'রিপোর্ট', icon: BarChart3 },
 ];

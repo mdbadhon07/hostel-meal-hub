@@ -19,19 +19,16 @@ const expenseItems = [
 ];
 
 export default function Expenses() {
-  const { members, expenses, addExpense, removeExpense } = useMeal();
+  const { expenses, addExpense, removeExpense } = useMeal();
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [item, setItem] = useState('');
   const [amount, setAmount] = useState('');
-  const [paidBy, setPaidBy] = useState('');
   const [expandedDate, setExpandedDate] = useState<string | null>(null);
-
-  const activeMembers = members.filter(m => m.isActive);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!item || !amount || !paidBy) {
+    if (!item || !amount) {
       toast.error('সব তথ্য পূরণ করুন');
       return;
     }
@@ -40,12 +37,10 @@ export default function Expenses() {
       date,
       item,
       amount: parseFloat(amount),
-      paidBy,
     });
 
     setItem('');
     setAmount('');
-    setPaidBy('');
     toast.success('খরচ যোগ করা হয়েছে!');
   };
 
@@ -54,14 +49,8 @@ export default function Expenses() {
     return date.toLocaleDateString('bn-BD', { 
       weekday: 'long',
       day: 'numeric', 
-      month: 'long', 
-      year: 'numeric' 
+      month: 'long'
     });
-  };
-
-  const getMemberName = (id: string) => {
-    const member = members.find(m => m.id === id);
-    return member?.name || 'অজানা';
   };
 
   // Group expenses by date
@@ -124,20 +113,6 @@ export default function Expenses() {
             </Select>
           </div>
 
-          <div>
-            <label className="form-label">কে দিয়েছে</label>
-            <Select value={paidBy} onValueChange={setPaidBy}>
-              <SelectTrigger className="h-12">
-                <SelectValue placeholder="সদস্য নির্বাচন করুন" />
-              </SelectTrigger>
-              <SelectContent>
-                {activeMembers.map(m => (
-                  <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
           <Button type="submit" className="w-full h-12 text-lg">
             <Plus className="mr-2" size={20} />
             খরচ যোগ করুন
@@ -146,10 +121,10 @@ export default function Expenses() {
       </div>
 
       {/* Total Summary */}
-      <div className="bg-success/10 rounded-lg border border-success/20 p-4 mb-6">
+      <div className="bg-warning/10 rounded-lg border border-warning/20 p-4 mb-6">
         <div className="flex justify-between items-center">
           <span className="font-medium text-foreground">এই মাসের মোট খরচ</span>
-          <span className="text-2xl font-bold text-success">৳{totalExpenses.toLocaleString('bn-BD')}</span>
+          <span className="text-2xl font-bold text-warning">৳{totalExpenses.toLocaleString('bn-BD')}</span>
         </div>
       </div>
 
@@ -177,8 +152,8 @@ export default function Expenses() {
                     className="w-full p-4 flex items-center justify-between hover:bg-muted/50 transition-colors"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                        <Calendar size={24} className="text-primary" />
+                      <div className="w-12 h-12 rounded-lg bg-warning/10 flex items-center justify-center">
+                        <Calendar size={24} className="text-warning" />
                       </div>
                       <div className="text-left">
                         <p className="font-semibold">{formatDate(dateKey)}</p>
@@ -189,8 +164,7 @@ export default function Expenses() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-2xl font-bold text-primary">৳{dayTotal.toLocaleString('bn-BD')}</p>
-                      <p className="text-xs text-muted-foreground">মোট খরচ</p>
+                      <p className="text-2xl font-bold text-warning">৳{dayTotal.toLocaleString('bn-BD')}</p>
                     </div>
                   </button>
 
@@ -200,10 +174,7 @@ export default function Expenses() {
                       <div className="bg-muted/30 rounded-lg overflow-hidden border border-border">
                         {dayExpenses.map(expense => (
                           <div key={expense.id} className="flex items-center justify-between p-3 border-b border-border last:border-0">
-                            <div>
-                              <p className="font-medium">{expense.item}</p>
-                              <p className="text-xs text-muted-foreground">{getMemberName(expense.paidBy)} দিয়েছে</p>
-                            </div>
+                            <span className="font-medium">{expense.item}</span>
                             <div className="flex items-center gap-2">
                               <span className="font-semibold">৳{expense.amount.toLocaleString('bn-BD')}</span>
                               <button
