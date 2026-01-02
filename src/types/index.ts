@@ -25,6 +25,13 @@ export interface Deposit {
   amount: number;
 }
 
+export interface MaidPayment {
+  id: string;
+  date: string;
+  amount: number;
+  note?: string;
+}
+
 export interface MemberSummary {
   memberId: string;
   name: string;

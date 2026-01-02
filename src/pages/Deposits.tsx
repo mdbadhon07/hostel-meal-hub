@@ -9,15 +9,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, Trash2, ChevronDown, ChevronUp, User, Calendar, Wallet } from 'lucide-react';
+import { Plus, Trash2, ChevronDown, ChevronUp, User, Calendar, Wallet, HandCoins } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function Deposits() {
-  const { members, deposits, addDeposit, removeDeposit } = useMeal();
+  const { members, deposits, maidPayments, addDeposit, removeDeposit, addMaidPayment, removeMaidPayment } = useMeal();
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [memberId, setMemberId] = useState('');
   const [amount, setAmount] = useState('');
   const [expandedMember, setExpandedMember] = useState<string | null>(null);
+
+  // Maid payment states
+  const [maidDate, setMaidDate] = useState(new Date().toISOString().split('T')[0]);
+  const [maidAmount, setMaidAmount] = useState('');
+  const [maidNote, setMaidNote] = useState('');
 
   const activeMembers = members.filter(m => m.isActive);
 
@@ -38,6 +43,25 @@ export default function Deposits() {
     setMemberId('');
     setAmount('');
     toast.success('জমা যোগ করা হয়েছে!');
+  };
+
+  const handleMaidPaymentSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!maidAmount) {
+      toast.error('টাকার পরিমাণ দিন');
+      return;
+    }
+
+    addMaidPayment({
+      date: maidDate,
+      amount: parseFloat(maidAmount),
+      note: maidNote || undefined,
+    });
+
+    setMaidAmount('');
+    setMaidNote('');
+    toast.success('বুয়ার টাকা যোগ করা হয়েছে!');
   };
 
   const formatDate = (dateStr: string) => {
@@ -69,6 +93,8 @@ export default function Deposits() {
   }).sort((a, b) => b.total - a.total);
 
   const totalDeposits = deposits.reduce((sum, d) => sum + d.amount, 0);
+  const totalMaidPayments = maidPayments.reduce((sum, p) => sum + p.amount, 0);
+  const sortedMaidPayments = [...maidPayments].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   return (
     <div>
@@ -225,6 +251,108 @@ export default function Deposits() {
             );
           })}
         </div>
+      </div>
+
+      {/* Maid Payment Section */}
+      <div className="mt-8">
+        <h1 className="page-title">বুয়ার টাকা</h1>
+
+        {/* Add Maid Payment Form */}
+        <div className="bg-card rounded-lg border border-border p-4 mb-6">
+          <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+            <HandCoins size={20} className="text-accent" />
+            বুয়ার টাকা যোগ করুন
+          </h2>
+          <form onSubmit={handleMaidPaymentSubmit} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="form-label">তারিখ</label>
+                <Input 
+                  type="date" 
+                  value={maidDate}
+                  onChange={(e) => setMaidDate(e.target.value)}
+                  className="h-12"
+                />
+              </div>
+              <div>
+                <label className="form-label">টাকার পরিমাণ</label>
+                <Input 
+                  type="number" 
+                  placeholder="০" 
+                  value={maidAmount}
+                  onChange={(e) => setMaidAmount(e.target.value)}
+                  className="h-12"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="form-label">নোট (ঐচ্ছিক)</label>
+              <Input 
+                type="text" 
+                placeholder="যেমন: মাসিক বেতন, বোনাস ইত্যাদি" 
+                value={maidNote}
+                onChange={(e) => setMaidNote(e.target.value)}
+                className="h-12"
+              />
+            </div>
+
+            <Button type="submit" className="w-full h-12 text-lg" variant="secondary">
+              <Plus className="mr-2" size={20} />
+              বুয়ার টাকা যোগ করুন
+            </Button>
+          </form>
+        </div>
+
+        {/* Total Maid Payment Summary */}
+        <div className="bg-accent/10 rounded-lg border border-accent/20 p-4 mb-6">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-2">
+              <HandCoins className="text-accent" size={24} />
+              <span className="font-medium text-foreground">মোট বুয়ার টাকা</span>
+            </div>
+            <span className="text-2xl font-bold text-accent">৳{totalMaidPayments.toLocaleString('bn-BD')}</span>
+          </div>
+        </div>
+
+        {/* Maid Payment History */}
+        {sortedMaidPayments.length > 0 && (
+          <div className="bg-card rounded-lg border border-border overflow-hidden">
+            <div className="p-4 border-b border-border bg-accent/5">
+              <h2 className="text-lg font-semibold flex items-center gap-2">
+                <Calendar size={20} className="text-accent" />
+                বুয়ার টাকার তালিকা
+              </h2>
+            </div>
+
+            <div className="divide-y divide-border">
+              {sortedMaidPayments.map((payment) => (
+                <div key={payment.id} className="p-4 flex items-center justify-between">
+                  <div>
+                    <p className="font-medium">{formatDate(payment.date)}</p>
+                    {payment.note && (
+                      <p className="text-sm text-muted-foreground">{payment.note}</p>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-lg font-bold text-accent">
+                      ৳{payment.amount.toLocaleString('bn-BD')}
+                    </span>
+                    <button
+                      onClick={() => {
+                        removeMaidPayment(payment.id);
+                        toast.success('মুছে ফেলা হয়েছে');
+                      }}
+                      className="p-2 text-destructive hover:bg-destructive/10 rounded"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
