@@ -22,6 +22,7 @@ export default function Deposits() {
   // Maid payment states
   const [maidDate, setMaidDate] = useState(new Date().toISOString().split('T')[0]);
   const [maidAmount, setMaidAmount] = useState('');
+  const [maidPaidBy, setMaidPaidBy] = useState('');
   const [maidNote, setMaidNote] = useState('');
 
   const activeMembers = members.filter(m => m.isActive);
@@ -56,10 +57,12 @@ export default function Deposits() {
     addMaidPayment({
       date: maidDate,
       amount: parseFloat(maidAmount),
+      paidBy: maidPaidBy || undefined,
       note: maidNote || undefined,
     });
 
     setMaidAmount('');
+    setMaidPaidBy('');
     setMaidNote('');
     toast.success('বুয়ার টাকা যোগ করা হয়েছে!');
   };
@@ -287,6 +290,20 @@ export default function Deposits() {
             </div>
 
             <div>
+              <label className="form-label">কে দিল (ঐচ্ছিক)</label>
+              <Select value={maidPaidBy} onValueChange={setMaidPaidBy}>
+                <SelectTrigger className="h-12">
+                  <SelectValue placeholder="সদস্য নির্বাচন করুন" />
+                </SelectTrigger>
+                <SelectContent>
+                  {activeMembers.map(m => (
+                    <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
               <label className="form-label">নোট (ঐচ্ছিক)</label>
               <Input 
                 type="text" 
@@ -330,6 +347,11 @@ export default function Deposits() {
                 <div key={payment.id} className="p-4 flex items-center justify-between">
                   <div>
                     <p className="font-medium">{formatDate(payment.date)}</p>
+                    {payment.paidBy && (
+                      <p className="text-sm text-primary">
+                        দিয়েছেন: {getMemberName(payment.paidBy)}
+                      </p>
+                    )}
                     {payment.note && (
                       <p className="text-sm text-muted-foreground">{payment.note}</p>
                     )}

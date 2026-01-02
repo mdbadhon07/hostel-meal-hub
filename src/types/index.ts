@@ -29,6 +29,7 @@ export interface MaidPayment {
   id: string;
   date: string;
   amount: number;
+  paidBy?: string; // memberId who paid
   note?: string;
 }
 
