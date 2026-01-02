@@ -8,6 +8,7 @@ import Layout from "@/components/Layout";
 import Index from "./pages/Index";
 import DailyMeal from "./pages/DailyMeal";
 import Expenses from "./pages/Expenses";
+import Deposits from "./pages/Deposits";
 import Members from "./pages/Members";
 import Reports from "./pages/Reports";
 import NotFound from "./pages/NotFound";
@@ -26,6 +27,7 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/daily-meal" element={<DailyMeal />} />
               <Route path="/expenses" element={<Expenses />} />
+              <Route path="/deposits" element={<Deposits />} />
               <Route path="/members" element={<Members />} />
               <Route path="/reports" element={<Reports />} />
               <Route path="*" element={<NotFound />} />

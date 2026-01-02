@@ -1,19 +1,22 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { Member, DailyMeal, Expense, MemberSummary } from '@/types';
+import { Member, DailyMeal, Expense, Deposit, MemberSummary } from '@/types';
 
 interface MealContextType {
   members: Member[];
   meals: DailyMeal[];
   expenses: Expense[];
+  deposits: Deposit[];
   addMember: (name: string) => void;
   removeMember: (id: string) => void;
   toggleMemberStatus: (id: string) => void;
   updateMeal: (date: string, memberId: string, type: 'lunch' | 'dinner', value: boolean) => void;
   addExpense: (expense: Omit<Expense, 'id'>) => void;
   removeExpense: (id: string) => void;
+  addDeposit: (deposit: Omit<Deposit, 'id'>) => void;
+  removeDeposit: (id: string) => void;
   getMealsForDate: (date: string) => DailyMeal[];
   getTodayStats: () => { lunch: number; dinner: number; total: number };
-  getMonthlyStats: () => { totalMeals: number; totalExpenses: number; mealRate: number };
+  getMonthlyStats: () => { totalMeals: number; totalExpenses: number; totalDeposits: number; mealRate: number };
   getMemberSummaries: () => MemberSummary[];
 }
 
@@ -34,9 +37,14 @@ export function MealProvider({ children }: { children: ReactNode }) {
   const [members, setMembers] = useState<Member[]>(defaultMembers);
   const [meals, setMeals] = useState<DailyMeal[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([
-    { id: '1', date: '2026-01-01', item: 'চাল', amount: 3500, paidBy: '1' },
-    { id: '2', date: '2026-01-01', item: 'মাছ', amount: 1200, paidBy: '2' },
-    { id: '3', date: '2026-01-02', item: 'সবজি', amount: 800, paidBy: '3' },
+    { id: '1', date: '2026-01-01', item: 'চাল', amount: 3500 },
+    { id: '2', date: '2026-01-01', item: 'মাছ', amount: 1200 },
+    { id: '3', date: '2026-01-02', item: 'সবজি', amount: 800 },
+  ]);
+  const [deposits, setDeposits] = useState<Deposit[]>([
+    { id: '1', date: '2026-01-01', memberId: '1', amount: 2000 },
+    { id: '2', date: '2026-01-01', memberId: '2', amount: 1500 },
+    { id: '3', date: '2026-01-02', memberId: '3', amount: 2000 },
   ]);
 
   const addMember = (name: string) => {
@@ -91,6 +99,18 @@ export function MealProvider({ children }: { children: ReactNode }) {
     setExpenses(expenses.filter(e => e.id !== id));
   };
 
+  const addDeposit = (deposit: Omit<Deposit, 'id'>) => {
+    const newDeposit: Deposit = {
+      ...deposit,
+      id: Date.now().toString(),
+    };
+    setDeposits([...deposits, newDeposit]);
+  };
+
+  const removeDeposit = (id: string) => {
+    setDeposits(deposits.filter(d => d.id !== id));
+  };
+
   const getMealsForDate = (date: string): DailyMeal[] => {
     return members.filter(m => m.isActive).map(member => {
       const existing = meals.find(m => m.date === date && m.memberId === member.id);
@@ -126,9 +146,17 @@ export function MealProvider({ children }: { children: ReactNode }) {
     });
 
     const totalExpenses = monthlyExpenses.reduce((acc, e) => acc + e.amount, 0);
+
+    const monthlyDeposits = deposits.filter(d => {
+      const depDate = new Date(d.date);
+      return depDate.getMonth() === currentMonth && depDate.getFullYear() === currentYear;
+    });
+
+    const totalDeposits = monthlyDeposits.reduce((acc, d) => acc + d.amount, 0);
+
     const mealRate = totalMeals > 0 ? totalExpenses / totalMeals : 0;
 
-    return { totalMeals, totalExpenses, mealRate };
+    return { totalMeals, totalExpenses, totalDeposits, mealRate };
   };
 
   const getMemberSummaries = (): MemberSummary[] => {
@@ -150,15 +178,15 @@ export function MealProvider({ children }: { children: ReactNode }) {
       const totalMeals = totalLunch + totalDinner;
       const totalCost = totalMeals * mealRate;
 
-      const memberExpenses = expenses.filter(e => {
-        const expDate = new Date(e.date);
-        return e.paidBy === member.id && 
-               expDate.getMonth() === currentMonth && 
-               expDate.getFullYear() === currentYear;
+      const memberDeposits = deposits.filter(d => {
+        const depDate = new Date(d.date);
+        return d.memberId === member.id && 
+               depDate.getMonth() === currentMonth && 
+               depDate.getFullYear() === currentYear;
       });
 
-      const totalPaid = memberExpenses.reduce((acc, e) => acc + e.amount, 0);
-      const balance = totalPaid - totalCost;
+      const totalDeposit = memberDeposits.reduce((acc, d) => acc + d.amount, 0);
+      const balance = totalDeposit - totalCost;
 
       return {
         memberId: member.id,
@@ -167,7 +195,7 @@ export function MealProvider({ children }: { children: ReactNode }) {
         totalLunch,
         totalDinner,
         totalCost,
-        totalPaid,
+        totalDeposit,
         balance,
       };
     });
@@ -178,12 +206,15 @@ export function MealProvider({ children }: { children: ReactNode }) {
       members,
       meals,
       expenses,
+      deposits,
       addMember,
       removeMember,
       toggleMemberStatus,
       updateMeal,
       addExpense,
       removeExpense,
+      addDeposit,
+      removeDeposit,
       getMealsForDate,
       getTodayStats,
       getMonthlyStats,

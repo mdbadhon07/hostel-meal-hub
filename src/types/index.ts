@@ -16,7 +16,13 @@ export interface Expense {
   date: string;
   item: string;
   amount: number;
-  paidBy: string;
+}
+
+export interface Deposit {
+  id: string;
+  date: string;
+  memberId: string;
+  amount: number;
 }
 
 export interface MemberSummary {
@@ -26,6 +32,6 @@ export interface MemberSummary {
   totalLunch: number;
   totalDinner: number;
   totalCost: number;
-  totalPaid: number;
+  totalDeposit: number;
   balance: number;
 }
