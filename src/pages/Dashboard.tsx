@@ -1,6 +1,8 @@
 import { useMeal } from '@/context/MealContext';
 import StatCard from '@/components/StatCard';
-import { UtensilsCrossed, Moon, Sun, Wallet, PiggyBank, TrendingUp, TrendingDown, HandCoins } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { UtensilsCrossed, Moon, Sun, Wallet, PiggyBank, TrendingUp, TrendingDown, HandCoins, Settings } from 'lucide-react';
 
 export default function Dashboard() {
   const { getTodayStats, getMonthlyStats, members } = useMeal();
@@ -129,6 +131,15 @@ export default function Dashboard() {
           <p>• প্রতি সদস্যের গড় মিল: <span className="text-foreground font-medium">
             {activeMembers > 0 ? (monthlyStats.totalMeals / activeMembers).toFixed(1) : 0}
           </span></p>
+        </div>
+        
+        <div className="mt-4 pt-4 border-t border-border">
+          <Link to="/settings">
+            <Button variant="outline" className="gap-2">
+              <Settings size={18} />
+              সেটিংস ও ব্যাকআপ
+            </Button>
+          </Link>
         </div>
       </div>
     </div>
