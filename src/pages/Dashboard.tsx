@@ -1,15 +1,16 @@
 import { useMeal } from '@/context/MealContext';
 import StatCard from '@/components/StatCard';
-import { UtensilsCrossed, Moon, Sun, Wallet } from 'lucide-react';
+import { UtensilsCrossed, Moon, Sun, Wallet, PiggyBank, TrendingUp, TrendingDown } from 'lucide-react';
 
 export default function Dashboard() {
-  const { getTodayStats, getMonthlyStats, members, expenses } = useMeal();
+  const { getTodayStats, getMonthlyStats, members } = useMeal();
   const todayStats = getTodayStats();
   const monthlyStats = getMonthlyStats();
   const activeMembers = members.filter(m => m.isActive).length;
+  const cashBalance = monthlyStats.totalDeposits - monthlyStats.totalExpenses;
 
   const formatTaka = (amount: number) => {
-    return `৳${amount.toLocaleString('bn-BD', { maximumFractionDigits: 2 })}`;
+    return `৳${Math.abs(amount).toLocaleString('bn-BD', { maximumFractionDigits: 0 })}`;
   };
 
   const today = new Date();
@@ -20,6 +21,39 @@ export default function Dashboard() {
   return (
     <div>
       <h1 className="page-title">ড্যাশবোর্ড</h1>
+
+      {/* Cash Balance Highlight */}
+      <div className={`rounded-xl p-5 mb-6 border-2 ${
+        cashBalance >= 0 
+          ? 'bg-success/10 border-success/30' 
+          : 'bg-destructive/10 border-destructive/30'
+      }`}>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+              cashBalance >= 0 ? 'bg-success/20' : 'bg-destructive/20'
+            }`}>
+              {cashBalance >= 0 ? (
+                <TrendingUp size={28} className="text-success" />
+              ) : (
+                <TrendingDown size={28} className="text-destructive" />
+              )}
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">ক্যাশ ব্যালেন্স</p>
+              <p className={`text-3xl font-bold ${
+                cashBalance >= 0 ? 'text-success' : 'text-destructive'
+              }`}>
+                {cashBalance >= 0 ? '+' : '-'}{formatTaka(cashBalance)}
+              </p>
+            </div>
+          </div>
+          <div className="text-right text-sm text-muted-foreground">
+            <p>জমা: <span className="text-success font-medium">{formatTaka(monthlyStats.totalDeposits)}</span></p>
+            <p>খরচ: <span className="text-warning font-medium">{formatTaka(monthlyStats.totalExpenses)}</span></p>
+          </div>
+        </div>
+      </div>
       
       {/* Today's Stats */}
       <div className="mb-8">
@@ -57,7 +91,7 @@ export default function Dashboard() {
             value={monthlyStats.totalMeals} 
             label="মোট মিল" 
             icon={<UtensilsCrossed size={28} />}
-            variant="success"
+            variant="primary"
           />
           <StatCard 
             value={formatTaka(monthlyStats.totalExpenses)} 
@@ -66,12 +100,14 @@ export default function Dashboard() {
             variant="warning"
           />
           <StatCard 
-            value={formatTaka(monthlyStats.mealRate)} 
-            label="মিল রেট" 
+            value={formatTaka(monthlyStats.totalDeposits)} 
+            label="মোট জমা" 
+            icon={<PiggyBank size={28} />}
+            variant="success"
           />
           <StatCard 
-            value={expenses.length} 
-            label="মোট এন্ট্রি" 
+            value={formatTaka(monthlyStats.mealRate)} 
+            label="মিল রেট" 
           />
         </div>
       </div>
