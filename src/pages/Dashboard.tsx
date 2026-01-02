@@ -1,13 +1,13 @@
 import { useMeal } from '@/context/MealContext';
 import StatCard from '@/components/StatCard';
-import { UtensilsCrossed, Moon, Sun, Wallet, PiggyBank, TrendingUp, TrendingDown } from 'lucide-react';
+import { UtensilsCrossed, Moon, Sun, Wallet, PiggyBank, TrendingUp, TrendingDown, HandCoins } from 'lucide-react';
 
 export default function Dashboard() {
   const { getTodayStats, getMonthlyStats, members } = useMeal();
   const todayStats = getTodayStats();
   const monthlyStats = getMonthlyStats();
   const activeMembers = members.filter(m => m.isActive).length;
-  const cashBalance = monthlyStats.totalDeposits - monthlyStats.totalExpenses;
+  const cashBalance = monthlyStats.totalDeposits - monthlyStats.totalExpenses - monthlyStats.totalMaidPayments;
 
   const formatTaka = (amount: number) => {
     return `৳${Math.abs(amount).toLocaleString('bn-BD', { maximumFractionDigits: 0 })}`;
@@ -51,6 +51,7 @@ export default function Dashboard() {
           <div className="text-right text-sm text-muted-foreground">
             <p>জমা: <span className="text-success font-medium">{formatTaka(monthlyStats.totalDeposits)}</span></p>
             <p>খরচ: <span className="text-warning font-medium">{formatTaka(monthlyStats.totalExpenses)}</span></p>
+            <p>বুয়া: <span className="text-accent font-medium">{formatTaka(monthlyStats.totalMaidPayments)}</span></p>
           </div>
         </div>
       </div>
@@ -104,6 +105,12 @@ export default function Dashboard() {
             label="মোট জমা" 
             icon={<PiggyBank size={28} />}
             variant="success"
+          />
+          <StatCard 
+            value={formatTaka(monthlyStats.totalMaidPayments)} 
+            label="বুয়ার টাকা" 
+            icon={<HandCoins size={28} />}
+            variant="accent"
           />
           <StatCard 
             value={formatTaka(monthlyStats.mealRate)} 
