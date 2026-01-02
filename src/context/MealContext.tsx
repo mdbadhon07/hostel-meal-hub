@@ -1,5 +1,15 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Member, DailyMeal, Expense, Deposit, MaidPayment, MemberSummary } from '@/types';
+
+const STORAGE_KEY = 'mess-manager-data';
+
+interface StoredData {
+  members: Member[];
+  meals: DailyMeal[];
+  expenses: Expense[];
+  deposits: Deposit[];
+  maidPayments: MaidPayment[];
+}
 
 interface MealContextType {
   members: Member[];
@@ -21,6 +31,9 @@ interface MealContextType {
   getTodayStats: () => { lunch: number; dinner: number; total: number };
   getMonthlyStats: () => { totalMeals: number; totalExpenses: number; totalDeposits: number; totalMaidPayments: number; mealRate: number };
   getMemberSummaries: () => MemberSummary[];
+  exportData: () => string;
+  importData: (jsonString: string) => boolean;
+  clearAllData: () => void;
 }
 
 const MealContext = createContext<MealContextType | undefined>(undefined);
@@ -36,7 +49,28 @@ const defaultMembers: Member[] = [
   { id: '8', name: 'শাহরিয়ার কবির', isActive: true },
 ];
 
+const loadFromStorage = (): StoredData | null => {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) {
+      return JSON.parse(stored);
+    }
+  } catch (error) {
+    console.error('Error loading from localStorage:', error);
+  }
+  return null;
+};
+
+const saveToStorage = (data: StoredData) => {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  } catch (error) {
+    console.error('Error saving to localStorage:', error);
+  }
+};
+
 export function MealProvider({ children }: { children: ReactNode }) {
+  const [isLoaded, setIsLoaded] = useState(false);
   const [members, setMembers] = useState<Member[]>(defaultMembers);
   const [meals, setMeals] = useState<DailyMeal[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([
@@ -50,6 +84,26 @@ export function MealProvider({ children }: { children: ReactNode }) {
     { id: '3', date: '2026-01-02', memberId: '3', amount: 2000 },
   ]);
   const [maidPayments, setMaidPayments] = useState<MaidPayment[]>([]);
+
+  // Load data from localStorage on mount
+  useEffect(() => {
+    const stored = loadFromStorage();
+    if (stored) {
+      setMembers(stored.members);
+      setMeals(stored.meals);
+      setExpenses(stored.expenses);
+      setDeposits(stored.deposits);
+      setMaidPayments(stored.maidPayments);
+    }
+    setIsLoaded(true);
+  }, []);
+
+  // Save to localStorage whenever data changes
+  useEffect(() => {
+    if (isLoaded) {
+      saveToStorage({ members, meals, expenses, deposits, maidPayments });
+    }
+  }, [members, meals, expenses, deposits, maidPayments, isLoaded]);
 
   const addMember = (name: string) => {
     const newMember: Member = {
@@ -224,6 +278,44 @@ export function MealProvider({ children }: { children: ReactNode }) {
     });
   };
 
+  const exportData = (): string => {
+    const data: StoredData = {
+      members,
+      meals,
+      expenses,
+      deposits,
+      maidPayments,
+    };
+    return JSON.stringify(data, null, 2);
+  };
+
+  const importData = (jsonString: string): boolean => {
+    try {
+      const data = JSON.parse(jsonString) as StoredData;
+      if (data.members && data.meals && data.expenses && data.deposits && data.maidPayments) {
+        setMembers(data.members);
+        setMeals(data.meals);
+        setExpenses(data.expenses);
+        setDeposits(data.deposits);
+        setMaidPayments(data.maidPayments);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Error importing data:', error);
+      return false;
+    }
+  };
+
+  const clearAllData = () => {
+    setMembers(defaultMembers);
+    setMeals([]);
+    setExpenses([]);
+    setDeposits([]);
+    setMaidPayments([]);
+    localStorage.removeItem(STORAGE_KEY);
+  };
+
   return (
     <MealContext.Provider value={{
       members,
@@ -245,6 +337,9 @@ export function MealProvider({ children }: { children: ReactNode }) {
       getTodayStats,
       getMonthlyStats,
       getMemberSummaries,
+      exportData,
+      importData,
+      clearAllData,
     }}>
       {children}
     </MealContext.Provider>
