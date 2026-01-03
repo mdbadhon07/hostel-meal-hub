@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { useMeal } from '@/context/MealContext';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, Save, Check } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { ChevronLeft, ChevronRight, Save, Check, Edit3, ToggleLeft } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function DailyMeal() {
-  const { members, getMealsForDate, updateMeal, meals } = useMeal();
+  const { members, getMealsForDate, updateMeal, updateMealCount, meals } = useMeal();
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [isManualMode, setIsManualMode] = useState(false);
 
   const activeMembers = members.filter(m => m.isActive);
   const dailyMeals = getMealsForDate(selectedDate);
@@ -33,9 +35,21 @@ export default function DailyMeal() {
     return meal ? meal[type] : false;
   };
 
+  const getMealCount = (memberId: string, type: 'lunch' | 'dinner') => {
+    const meal = dailyMeals.find(m => m.memberId === memberId);
+    if (!meal) return 0;
+    const countField = type === 'lunch' ? 'lunchCount' : 'dinnerCount';
+    return meal[countField] ?? (meal[type] ? 1 : 0);
+  };
+
   const handleMealToggle = (memberId: string, type: 'lunch' | 'dinner') => {
     const currentValue = getMealStatus(memberId, type);
     updateMeal(selectedDate, memberId, type, !currentValue);
+  };
+
+  const handleMealCountChange = (memberId: string, type: 'lunch' | 'dinner', value: string) => {
+    const count = parseInt(value) || 0;
+    updateMealCount(selectedDate, memberId, type, Math.max(0, count));
   };
 
   const handleSave = () => {
@@ -44,8 +58,8 @@ export default function DailyMeal() {
 
   // Calculate totals for the day
   const todayMeals = meals.filter(m => m.date === selectedDate);
-  const lunchCount = todayMeals.filter(m => m.lunch).length;
-  const dinnerCount = todayMeals.filter(m => m.dinner).length;
+  const lunchCount = todayMeals.reduce((acc, m) => acc + (m.lunchCount ?? (m.lunch ? 1 : 0)), 0);
+  const dinnerCount = todayMeals.reduce((acc, m) => acc + (m.dinnerCount ?? (m.dinner ? 1 : 0)), 0);
 
   const isToday = selectedDate === new Date().toISOString().split('T')[0];
 
@@ -79,6 +93,29 @@ export default function DailyMeal() {
             <ChevronRight size={24} />
           </button>
         </div>
+      </div>
+
+      {/* Mode Toggle */}
+      <div className="bg-card rounded-lg border border-border p-3 mb-4">
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-medium text-foreground">
+            {isManualMode ? 'ম্যানুয়াল ইনপুট মোড' : 'চেকবক্স মোড'}
+          </span>
+          <Button
+            variant={isManualMode ? "default" : "outline"}
+            size="sm"
+            onClick={() => setIsManualMode(!isManualMode)}
+            className="gap-2"
+          >
+            {isManualMode ? <Edit3 size={16} /> : <ToggleLeft size={16} />}
+            {isManualMode ? 'ম্যানুয়াল' : 'চেকবক্স'}
+          </Button>
+        </div>
+        {isManualMode && (
+          <p className="text-xs text-muted-foreground mt-2">
+            সংখ্যা দিয়ে মিল ইনপুট করুন। পুরানো হিসাব তুলতে এই মোড ব্যবহার করুন।
+          </p>
+        )}
       </div>
 
       {/* Daily Totals */}
@@ -116,28 +153,48 @@ export default function DailyMeal() {
                 >
                   <td className="table-cell text-left font-medium">{member.name}</td>
                   <td className="table-cell">
-                    <button
-                      onClick={() => handleMealToggle(member.id, 'lunch')}
-                      className={`w-10 h-10 rounded-lg border-2 flex items-center justify-center transition-all ${
-                        getMealStatus(member.id, 'lunch')
-                          ? 'bg-primary border-primary text-primary-foreground'
-                          : 'border-border hover:border-primary/50'
-                      }`}
-                    >
-                      {getMealStatus(member.id, 'lunch') && <Check size={20} />}
-                    </button>
+                    {isManualMode ? (
+                      <Input
+                        type="number"
+                        min="0"
+                        value={getMealCount(member.id, 'lunch')}
+                        onChange={(e) => handleMealCountChange(member.id, 'lunch', e.target.value)}
+                        className="w-16 h-10 text-center"
+                      />
+                    ) : (
+                      <button
+                        onClick={() => handleMealToggle(member.id, 'lunch')}
+                        className={`w-10 h-10 rounded-lg border-2 flex items-center justify-center transition-all ${
+                          getMealStatus(member.id, 'lunch')
+                            ? 'bg-primary border-primary text-primary-foreground'
+                            : 'border-border hover:border-primary/50'
+                        }`}
+                      >
+                        {getMealStatus(member.id, 'lunch') && <Check size={20} />}
+                      </button>
+                    )}
                   </td>
                   <td className="table-cell">
-                    <button
-                      onClick={() => handleMealToggle(member.id, 'dinner')}
-                      className={`w-10 h-10 rounded-lg border-2 flex items-center justify-center transition-all ${
-                        getMealStatus(member.id, 'dinner')
-                          ? 'bg-primary border-primary text-primary-foreground'
-                          : 'border-border hover:border-primary/50'
-                      }`}
-                    >
-                      {getMealStatus(member.id, 'dinner') && <Check size={20} />}
-                    </button>
+                    {isManualMode ? (
+                      <Input
+                        type="number"
+                        min="0"
+                        value={getMealCount(member.id, 'dinner')}
+                        onChange={(e) => handleMealCountChange(member.id, 'dinner', e.target.value)}
+                        className="w-16 h-10 text-center"
+                      />
+                    ) : (
+                      <button
+                        onClick={() => handleMealToggle(member.id, 'dinner')}
+                        className={`w-10 h-10 rounded-lg border-2 flex items-center justify-center transition-all ${
+                          getMealStatus(member.id, 'dinner')
+                            ? 'bg-primary border-primary text-primary-foreground'
+                            : 'border-border hover:border-primary/50'
+                        }`}
+                      >
+                        {getMealStatus(member.id, 'dinner') && <Check size={20} />}
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}

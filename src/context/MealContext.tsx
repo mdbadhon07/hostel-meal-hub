@@ -21,6 +21,7 @@ interface MealContextType {
   removeMember: (id: string) => void;
   toggleMemberStatus: (id: string) => void;
   updateMeal: (date: string, memberId: string, type: 'lunch' | 'dinner', value: boolean) => void;
+  updateMealCount: (date: string, memberId: string, type: 'lunch' | 'dinner', count: number) => void;
   addExpense: (expense: Omit<Expense, 'id'>) => void;
   removeExpense: (id: string) => void;
   addDeposit: (deposit: Omit<Deposit, 'id'>) => void;
@@ -153,6 +154,31 @@ export function MealProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const updateMealCount = (date: string, memberId: string, type: 'lunch' | 'dinner', count: number) => {
+    const existingIndex = meals.findIndex(m => m.date === date && m.memberId === memberId);
+    const countField = type === 'lunch' ? 'lunchCount' : 'dinnerCount';
+    
+    if (existingIndex >= 0) {
+      const updated = [...meals];
+      updated[existingIndex] = {
+        ...updated[existingIndex],
+        [type]: count > 0,
+        [countField]: count,
+      };
+      setMeals(updated);
+    } else {
+      const newMeal: DailyMeal = {
+        date,
+        memberId,
+        lunch: type === 'lunch' ? count > 0 : false,
+        dinner: type === 'dinner' ? count > 0 : false,
+        lunchCount: type === 'lunch' ? count : 0,
+        dinnerCount: type === 'dinner' ? count : 0,
+      };
+      setMeals([...meals, newMeal]);
+    }
+  };
+
   const addExpense = (expense: Omit<Expense, 'id'>) => {
     const newExpense: Expense = {
       ...expense,
@@ -215,7 +241,9 @@ export function MealProvider({ children }: { children: ReactNode }) {
     });
 
     const totalMeals = monthlyMeals.reduce((acc, m) => {
-      return acc + (m.lunch ? 1 : 0) + (m.dinner ? 1 : 0);
+      const lunchCount = m.lunchCount ?? (m.lunch ? 1 : 0);
+      const dinnerCount = m.dinnerCount ?? (m.dinner ? 1 : 0);
+      return acc + lunchCount + dinnerCount;
     }, 0);
 
     const monthlyExpenses = expenses.filter(e => {
@@ -258,8 +286,8 @@ export function MealProvider({ children }: { children: ReactNode }) {
                mealDate.getFullYear() === currentYear;
       });
 
-      const totalLunch = memberMeals.filter(m => m.lunch).length;
-      const totalDinner = memberMeals.filter(m => m.dinner).length;
+      const totalLunch = memberMeals.reduce((acc, m) => acc + (m.lunchCount ?? (m.lunch ? 1 : 0)), 0);
+      const totalDinner = memberMeals.reduce((acc, m) => acc + (m.dinnerCount ?? (m.dinner ? 1 : 0)), 0);
       const totalMeals = totalLunch + totalDinner;
       const totalCost = totalMeals * mealRate;
 
@@ -335,6 +363,7 @@ export function MealProvider({ children }: { children: ReactNode }) {
       removeMember,
       toggleMemberStatus,
       updateMeal,
+      updateMealCount,
       addExpense,
       removeExpense,
       addDeposit,
