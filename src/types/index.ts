@@ -9,6 +9,8 @@ export interface DailyMeal {
   memberId: string;
   lunch: boolean;
   dinner: boolean;
+  lunchCount?: number;  // Manual meal count
+  dinnerCount?: number; // Manual meal count
 }
 
 export interface Expense {
