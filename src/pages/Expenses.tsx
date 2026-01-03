@@ -126,15 +126,9 @@ export default function Expenses() {
     new Date(b).getTime() - new Date(a).getTime()
   );
 
-  // Helper to check if date is in current month
-  const isCurrentMonth = (dateStr: string) => {
-    const now = new Date();
-    const [year, month] = dateStr.split('-').map(Number);
-    return month - 1 === now.getMonth() && year === now.getFullYear();
-  };
-
-  const totalExpenses = expenses.filter(e => isCurrentMonth(e.date)).reduce((sum, e) => sum + e.amount, 0);
-  const totalExtraExpenses = extraExpenses.filter(e => isCurrentMonth(e.date)).reduce((sum, e) => sum + e.amount, 0);
+  // সব খরচের মোট (মাস ফিল্টার ছাড়া)
+  const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
+  const totalExtraExpenses = extraExpenses.reduce((sum, e) => sum + e.amount, 0);
 
   return (
     <div>
