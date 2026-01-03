@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { Member, DailyMeal, Expense, ExtraExpense, Deposit, MaidPayment, MemberSummary } from '@/types';
+import { Member, DailyMeal, Expense, ExtraExpense, Deposit, MaidPayment, ShopTransaction, MemberSummary } from '@/types';
 
 const STORAGE_KEY = 'mess-manager-data';
 
@@ -10,6 +10,7 @@ interface StoredData {
   extraExpenses: ExtraExpense[];
   deposits: Deposit[];
   maidPayments: MaidPayment[];
+  shopTransactions: ShopTransaction[];
 }
 
 interface MealContextType {
@@ -19,6 +20,7 @@ interface MealContextType {
   extraExpenses: ExtraExpense[];
   deposits: Deposit[];
   maidPayments: MaidPayment[];
+  shopTransactions: ShopTransaction[];
   addMember: (name: string) => void;
   removeMember: (id: string) => void;
   toggleMemberStatus: (id: string) => void;
@@ -32,6 +34,9 @@ interface MealContextType {
   removeDeposit: (id: string) => void;
   addMaidPayment: (payment: Omit<MaidPayment, 'id'>) => void;
   removeMaidPayment: (id: string) => void;
+  addShopTransaction: (transaction: Omit<ShopTransaction, 'id'>) => void;
+  removeShopTransaction: (id: string) => void;
+  getShopBalance: () => { totalPurchase: number; totalPayment: number; balance: number };
   getMealsForDate: (date: string) => DailyMeal[];
   getTodayStats: () => { lunch: number; dinner: number; total: number };
   getMonthlyStats: () => { totalMeals: number; totalExpenses: number; totalExtraExpenses: number; totalDeposits: number; totalMaidPayments: number; mealRate: number };
@@ -90,6 +95,7 @@ export function MealProvider({ children }: { children: ReactNode }) {
     { id: '3', date: '2026-01-02', memberId: '3', amount: 2000 },
   ]);
   const [maidPayments, setMaidPayments] = useState<MaidPayment[]>([]);
+  const [shopTransactions, setShopTransactions] = useState<ShopTransaction[]>([]);
 
   // Load data from localStorage on mount
   useEffect(() => {
@@ -109,6 +115,7 @@ export function MealProvider({ children }: { children: ReactNode }) {
         { id: '3', date: '2026-01-02', memberId: '3', amount: 2000 },
       ]);
       setMaidPayments(stored.maidPayments || []);
+      setShopTransactions(stored.shopTransactions || []);
     }
     setIsLoaded(true);
   }, []);
@@ -116,9 +123,9 @@ export function MealProvider({ children }: { children: ReactNode }) {
   // Save to localStorage whenever data changes
   useEffect(() => {
     if (isLoaded) {
-      saveToStorage({ members, meals, expenses, extraExpenses, deposits, maidPayments });
+      saveToStorage({ members, meals, expenses, extraExpenses, deposits, maidPayments, shopTransactions });
     }
-  }, [members, meals, expenses, extraExpenses, deposits, maidPayments, isLoaded]);
+  }, [members, meals, expenses, extraExpenses, deposits, maidPayments, shopTransactions, isLoaded]);
 
   const addMember = (name: string) => {
     const newMember: Member = {
@@ -231,6 +238,29 @@ export function MealProvider({ children }: { children: ReactNode }) {
 
   const removeMaidPayment = (id: string) => {
     setMaidPayments(maidPayments.filter(p => p.id !== id));
+  };
+
+  const addShopTransaction = (transaction: Omit<ShopTransaction, 'id'>) => {
+    const newTransaction: ShopTransaction = {
+      ...transaction,
+      id: Date.now().toString(),
+    };
+    setShopTransactions([...shopTransactions, newTransaction]);
+  };
+
+  const removeShopTransaction = (id: string) => {
+    setShopTransactions(shopTransactions.filter(t => t.id !== id));
+  };
+
+  const getShopBalance = () => {
+    const totalPurchase = shopTransactions
+      .filter(t => t.type === 'purchase')
+      .reduce((sum, t) => sum + t.amount, 0);
+    const totalPayment = shopTransactions
+      .filter(t => t.type === 'payment')
+      .reduce((sum, t) => sum + t.amount, 0);
+    const balance = totalPurchase - totalPayment; // positive = বাকি, negative = অগ্রিম
+    return { totalPurchase, totalPayment, balance };
   };
 
   const getMealsForDate = (date: string): DailyMeal[] => {
@@ -350,6 +380,7 @@ export function MealProvider({ children }: { children: ReactNode }) {
       extraExpenses,
       deposits,
       maidPayments,
+      shopTransactions,
     };
     return JSON.stringify(data, null, 2);
   };
@@ -364,6 +395,7 @@ export function MealProvider({ children }: { children: ReactNode }) {
         setExtraExpenses(data.extraExpenses || []);
         setDeposits(data.deposits);
         setMaidPayments(data.maidPayments);
+        setShopTransactions(data.shopTransactions || []);
         return true;
       }
       return false;
@@ -380,6 +412,7 @@ export function MealProvider({ children }: { children: ReactNode }) {
     setExtraExpenses([]);
     setDeposits([]);
     setMaidPayments([]);
+    setShopTransactions([]);
     localStorage.removeItem(STORAGE_KEY);
   };
 
@@ -391,6 +424,7 @@ export function MealProvider({ children }: { children: ReactNode }) {
       extraExpenses,
       deposits,
       maidPayments,
+      shopTransactions,
       addMember,
       removeMember,
       toggleMemberStatus,
@@ -404,6 +438,9 @@ export function MealProvider({ children }: { children: ReactNode }) {
       removeDeposit,
       addMaidPayment,
       removeMaidPayment,
+      addShopTransaction,
+      removeShopTransaction,
+      getShopBalance,
       getMealsForDate,
       getTodayStats,
       getMonthlyStats,

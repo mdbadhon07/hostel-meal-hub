@@ -43,6 +43,14 @@ export interface MaidPayment {
   note?: string;
 }
 
+export interface ShopTransaction {
+  id: string;
+  date: string;
+  type: 'purchase' | 'payment'; // purchase = বাজার, payment = জমা
+  amount: number;
+  note?: string;
+}
+
 export interface MemberSummary {
   memberId: string;
   name: string;
