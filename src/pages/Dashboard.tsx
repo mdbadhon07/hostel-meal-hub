@@ -80,13 +80,13 @@ export default function Dashboard() {
                 <p className={`text-xl font-bold ${
                   shopBalance.balance > 0 ? 'text-destructive' : 'text-success'
                 }`}>
-                  {shopBalance.balance > 0 ? 'বাকি: ' : 'অগ্রিম: '}৳{Math.abs(shopBalance.balance).toLocaleString('bn-BD')}
+                  {shopBalance.balance > 0 ? 'বাকি: ' : shopBalance.balance < 0 ? 'অগ্রিম: ' : ''}৳{Math.abs(shopBalance.balance) === 0 ? '০০' : Math.abs(shopBalance.balance).toLocaleString('bn-BD')}
                 </p>
               </div>
             </div>
             <div className="text-right text-xs text-muted-foreground">
-              <p>বাজার: ৳{shopBalance.totalPurchase.toLocaleString('bn-BD')}</p>
-              <p>জমা: ৳{shopBalance.totalPayment.toLocaleString('bn-BD')}</p>
+              <p>বাজার: ৳{shopBalance.totalPurchase === 0 ? '০০' : shopBalance.totalPurchase.toLocaleString('bn-BD')}</p>
+              <p>জমা: ৳{shopBalance.totalPayment === 0 ? '০০' : shopBalance.totalPayment.toLocaleString('bn-BD')}</p>
             </div>
           </div>
         </div>
