@@ -12,6 +12,7 @@ import Deposits from "./pages/Deposits";
 import Members from "./pages/Members";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
+import ShopAccount from "./pages/ShopAccount";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,6 +31,7 @@ const App = () => (
               <Route path="/expenses" element={<Expenses />} />
               <Route path="/deposits" element={<Deposits />} />
               <Route path="/members" element={<Members />} />
+              <Route path="/shop-account" element={<ShopAccount />} />
               <Route path="/reports" element={<Reports />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="*" element={<NotFound />} />

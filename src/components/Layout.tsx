@@ -9,7 +9,8 @@ import {
   Menu,
   X,
   Wallet,
-  Settings
+  Settings,
+  Store
 } from 'lucide-react';
 
 interface LayoutProps {
@@ -22,6 +23,7 @@ const navItems = [
   { path: '/expenses', label: 'খরচ', icon: Receipt },
   { path: '/deposits', label: 'জমা', icon: Wallet },
   { path: '/members', label: 'সদস্য', icon: Users },
+  { path: '/shop-account', label: 'দোকান হিসাব', icon: Store },
   { path: '/reports', label: 'রিপোর্ট', icon: BarChart3 },
   { path: '/settings', label: 'সেটিংস', icon: Settings },
 ];
