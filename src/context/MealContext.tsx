@@ -243,7 +243,8 @@ export function MealProvider({ children }: { children: ReactNode }) {
     const totalMeals = monthlyMeals.reduce((acc, m) => {
       const lunchCount = m.lunchCount ?? (m.lunch ? 1 : 0);
       const dinnerCount = m.dinnerCount ?? (m.dinner ? 1 : 0);
-      return acc + lunchCount + dinnerCount;
+      // দুপুর = ১ মিল, রাত = ০.৫ মিল
+      return acc + (lunchCount * 1) + (dinnerCount * 0.5);
     }, 0);
 
     const monthlyExpenses = expenses.filter(e => {
@@ -288,7 +289,8 @@ export function MealProvider({ children }: { children: ReactNode }) {
 
       const totalLunch = memberMeals.reduce((acc, m) => acc + (m.lunchCount ?? (m.lunch ? 1 : 0)), 0);
       const totalDinner = memberMeals.reduce((acc, m) => acc + (m.dinnerCount ?? (m.dinner ? 1 : 0)), 0);
-      const totalMeals = totalLunch + totalDinner;
+      // দুপুর = ১ মিল, রাত = ০.৫ মিল
+      const totalMeals = (totalLunch * 1) + (totalDinner * 0.5);
       const totalCost = totalMeals * mealRate;
 
       const memberDeposits = deposits.filter(d => {

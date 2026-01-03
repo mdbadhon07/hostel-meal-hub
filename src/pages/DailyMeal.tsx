@@ -56,10 +56,11 @@ export default function DailyMeal() {
     toast.success('মিল সংরক্ষণ করা হয়েছে!');
   };
 
-  // Calculate totals for the day
+  // Calculate totals for the day (দুপুর = ১ মিল, রাত = ০.৫ মিল)
   const todayMeals = meals.filter(m => m.date === selectedDate);
   const lunchCount = todayMeals.reduce((acc, m) => acc + (m.lunchCount ?? (m.lunch ? 1 : 0)), 0);
   const dinnerCount = todayMeals.reduce((acc, m) => acc + (m.dinnerCount ?? (m.dinner ? 1 : 0)), 0);
+  const totalMealValue = (lunchCount * 1) + (dinnerCount * 0.5);
 
   const isToday = selectedDate === new Date().toISOString().split('T')[0];
 
@@ -129,8 +130,8 @@ export default function DailyMeal() {
           <p className="text-sm text-muted-foreground">রাত</p>
         </div>
         <div className="bg-success/10 rounded-lg p-3 text-center">
-          <p className="text-2xl font-bold text-success">{lunchCount + dinnerCount}</p>
-          <p className="text-sm text-muted-foreground">মোট</p>
+          <p className="text-2xl font-bold text-success">{totalMealValue}</p>
+          <p className="text-sm text-muted-foreground">মোট মিল</p>
         </div>
       </div>
 
