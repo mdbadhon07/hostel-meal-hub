@@ -13,8 +13,15 @@ export default function Dashboard() {
   const totalAllExpenses = monthlyStats.totalExpenses + monthlyStats.totalExtraExpenses;
   const cashBalance = monthlyStats.totalDeposits - totalAllExpenses - monthlyStats.totalMaidPayments;
 
+  const toBengaliNumber = (num: number): string => {
+    const bengaliDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+    return Math.round(num).toString().split('').map(d => bengaliDigits[parseInt(d)] || d).join('');
+  };
+
   const formatTaka = (amount: number) => {
-    return `৳${Math.abs(amount).toLocaleString('bn-BD', { maximumFractionDigits: 0 })}`;
+    const absAmount = Math.abs(amount);
+    if (absAmount === 0) return '৳০';
+    return `৳${toBengaliNumber(absAmount)}`;
   };
 
   const today = new Date();
@@ -80,13 +87,13 @@ export default function Dashboard() {
                 <p className={`text-xl font-bold ${
                   shopBalance.balance > 0 ? 'text-destructive' : 'text-success'
                 }`}>
-                  {shopBalance.balance > 0 ? 'বাকি: ' : shopBalance.balance < 0 ? 'অগ্রিম: ' : ''}৳{Math.abs(shopBalance.balance) === 0 ? '০০' : Math.abs(shopBalance.balance).toLocaleString('bn-BD')}
+                  {shopBalance.balance > 0 ? 'বাকি: ' : shopBalance.balance < 0 ? 'অগ্রিম: ' : ''}{formatTaka(shopBalance.balance)}
                 </p>
               </div>
             </div>
             <div className="text-right text-xs text-muted-foreground">
-              <p>বাজার: ৳{shopBalance.totalPurchase === 0 ? '০০' : shopBalance.totalPurchase.toLocaleString('bn-BD')}</p>
-              <p>জমা: ৳{shopBalance.totalPayment === 0 ? '০০' : shopBalance.totalPayment.toLocaleString('bn-BD')}</p>
+              <p>বাজার: {formatTaka(shopBalance.totalPurchase)}</p>
+              <p>জমা: {formatTaka(shopBalance.totalPayment)}</p>
             </div>
           </div>
         </div>

@@ -74,8 +74,23 @@ export default function Expenses() {
     toast.success('অতিরিক্ত বাজার যোগ করা হয়েছে!');
   };
 
+  const toBengaliNumber = (num: number): string => {
+    const bengaliDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+    return Math.round(num).toString().split('').map(d => {
+      if (d === '-') return '-';
+      if (d === '.') return '.';
+      return bengaliDigits[parseInt(d)] || d;
+    }).join('');
+  };
+
+  const formatTaka = (amount: number) => {
+    if (amount === 0) return '৳০';
+    return `৳${toBengaliNumber(amount)}`;
+  };
+
   const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
+    const [year, month, day] = dateStr.split('-').map(Number);
+    const date = new Date(year, month - 1, day);
     return date.toLocaleDateString('bn-BD', { 
       weekday: 'long',
       day: 'numeric', 
@@ -111,8 +126,15 @@ export default function Expenses() {
     new Date(b).getTime() - new Date(a).getTime()
   );
 
-  const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
-  const totalExtraExpenses = extraExpenses.reduce((sum, e) => sum + e.amount, 0);
+  // Helper to check if date is in current month
+  const isCurrentMonth = (dateStr: string) => {
+    const now = new Date();
+    const [year, month] = dateStr.split('-').map(Number);
+    return month - 1 === now.getMonth() && year === now.getFullYear();
+  };
+
+  const totalExpenses = expenses.filter(e => isCurrentMonth(e.date)).reduce((sum, e) => sum + e.amount, 0);
+  const totalExtraExpenses = extraExpenses.filter(e => isCurrentMonth(e.date)).reduce((sum, e) => sum + e.amount, 0);
 
   return (
     <div>
@@ -183,7 +205,7 @@ export default function Expenses() {
           <div className="bg-warning/10 rounded-lg border border-warning/20 p-4 mb-6">
             <div className="flex justify-between items-center">
               <span className="font-medium text-foreground">এই মাসের মোট বাজার খরচ</span>
-              <span className="text-2xl font-bold text-warning">৳{totalExpenses.toLocaleString('bn-BD')}</span>
+              <span className="text-2xl font-bold text-warning">{formatTaka(totalExpenses)}</span>
             </div>
           </div>
 
@@ -223,7 +245,7 @@ export default function Expenses() {
                           </div>
                         </div>
                         <div className="text-right">
-                          <p className="text-2xl font-bold text-warning">৳{dayTotal.toLocaleString('bn-BD')}</p>
+                          <p className="text-2xl font-bold text-warning">{formatTaka(dayTotal)}</p>
                         </div>
                       </button>
 
@@ -235,7 +257,7 @@ export default function Expenses() {
                               <div key={expense.id} className="flex items-center justify-between p-3 border-b border-border last:border-0">
                                 <span className="font-medium">{expense.item}</span>
                                 <div className="flex items-center gap-2">
-                                  <span className="font-semibold">৳{expense.amount.toLocaleString('bn-BD')}</span>
+                                  <span className="font-semibold">{formatTaka(expense.amount)}</span>
                                   <button
                                     onClick={(e) => {
                                       e.stopPropagation();
@@ -320,7 +342,7 @@ export default function Expenses() {
           <div className="bg-accent/10 rounded-lg border border-accent/20 p-4 mb-6">
             <div className="flex justify-between items-center">
               <span className="font-medium text-foreground">এই মাসের মোট অতিরিক্ত বাজার</span>
-              <span className="text-2xl font-bold text-accent-foreground">৳{totalExtraExpenses.toLocaleString('bn-BD')}</span>
+              <span className="text-2xl font-bold text-accent-foreground">{formatTaka(totalExtraExpenses)}</span>
             </div>
           </div>
 
@@ -360,7 +382,7 @@ export default function Expenses() {
                           </div>
                         </div>
                         <div className="text-right">
-                          <p className="text-2xl font-bold text-accent-foreground">৳{dayTotal.toLocaleString('bn-BD')}</p>
+                          <p className="text-2xl font-bold text-accent-foreground">{formatTaka(dayTotal)}</p>
                         </div>
                       </button>
 
@@ -377,7 +399,7 @@ export default function Expenses() {
                                   )}
                                 </div>
                                 <div className="flex items-center gap-2">
-                                  <span className="font-semibold">৳{expense.amount.toLocaleString('bn-BD')}</span>
+                                  <span className="font-semibold">{formatTaka(expense.amount)}</span>
                                   <button
                                     onClick={(e) => {
                                       e.stopPropagation();
