@@ -283,18 +283,11 @@ export function MealProvider({ children }: { children: ReactNode }) {
   };
 
   const getMemberSummaries = (): MemberSummary[] => {
-    const now = new Date();
-    const currentMonth = now.getMonth();
-    const currentYear = now.getFullYear();
     const { mealRate } = getMonthlyStats();
 
     return members.filter(m => m.isActive).map(member => {
-      const memberMeals = meals.filter(m => {
-        const mealDate = new Date(m.date);
-        return m.memberId === member.id && 
-               mealDate.getMonth() === currentMonth && 
-               mealDate.getFullYear() === currentYear;
-      });
+      // সব মাসের মিল (মাস ফিল্টার ছাড়া)
+      const memberMeals = meals.filter(m => m.memberId === member.id);
 
       const totalLunch = memberMeals.reduce((acc, m) => acc + (m.lunchCount ?? (m.lunch ? 1 : 0)), 0);
       const totalDinner = memberMeals.reduce((acc, m) => acc + (m.dinnerCount ?? (m.dinner ? 1 : 0)), 0);
@@ -302,13 +295,8 @@ export function MealProvider({ children }: { children: ReactNode }) {
       const totalMeals = (totalLunch * 1) + (totalDinner * 0.5);
       const totalCost = totalMeals * mealRate;
 
-      const memberDeposits = deposits.filter(d => {
-        const depDate = new Date(d.date);
-        return d.memberId === member.id && 
-               depDate.getMonth() === currentMonth && 
-               depDate.getFullYear() === currentYear;
-      });
-
+      // সব মাসের জমা (মাস ফিল্টার ছাড়া)
+      const memberDeposits = deposits.filter(d => d.memberId === member.id);
       const totalDeposit = memberDeposits.reduce((acc, d) => acc + d.amount, 0);
       const balance = totalDeposit - totalCost;
 

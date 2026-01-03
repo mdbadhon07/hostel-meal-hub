@@ -6,39 +6,52 @@ export default function Reports() {
   const monthlyStats = getMonthlyStats();
   const summaries = getMemberSummaries();
 
-  const today = new Date();
-  const bengaliMonths = ['জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন',
-                         'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'];
-  const currentMonth = bengaliMonths[today.getMonth()];
+  const toBengaliNumber = (num: number): string => {
+    const bengaliDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+    return Math.round(num).toString().split('').map(d => bengaliDigits[parseInt(d)] || d).join('');
+  };
 
   const formatTaka = (amount: number) => {
-    return `৳${Math.abs(amount).toLocaleString('bn-BD', { maximumFractionDigits: 0 })}`;
+    const absAmount = Math.abs(amount);
+    if (absAmount === 0) return '৳০';
+    return `৳${toBengaliNumber(absAmount)}`;
   };
+
+  // Calculate total balance
+  const totalBalance = monthlyStats.totalDeposits - monthlyStats.totalExpenses - monthlyStats.totalExtraExpenses - monthlyStats.totalMaidPayments;
 
   return (
     <div>
-      <h1 className="page-title">{currentMonth} মাসের রিপোর্ট</h1>
+      <h1 className="page-title">সর্বমোট রিপোর্ট</h1>
 
-      {/* Monthly Overview */}
+      {/* Total Overview */}
       <div className="bg-card rounded-lg border border-border p-4 mb-6">
-        <h2 className="text-lg font-semibold mb-4">মাসিক সারসংক্ষেপ</h2>
+        <h2 className="text-lg font-semibold mb-4">সর্বমোট সারসংক্ষেপ</h2>
         <div className="grid grid-cols-2 gap-4">
           <div className="bg-muted/50 rounded-lg p-4">
             <p className="text-sm text-muted-foreground">মোট মিল</p>
             <p className="text-2xl font-bold text-foreground">{monthlyStats.totalMeals}</p>
           </div>
           <div className="bg-warning/10 rounded-lg p-4">
-            <p className="text-sm text-muted-foreground">মোট খরচ</p>
+            <p className="text-sm text-muted-foreground">বাজার খরচ</p>
             <p className="text-2xl font-bold text-warning">{formatTaka(monthlyStats.totalExpenses)}</p>
+          </div>
+          <div className="bg-purple-500/10 rounded-lg p-4">
+            <p className="text-sm text-muted-foreground">অতিরিক্ত বাজার</p>
+            <p className="text-2xl font-bold text-purple-500">{formatTaka(monthlyStats.totalExtraExpenses)}</p>
+          </div>
+          <div className="bg-accent/10 rounded-lg p-4">
+            <p className="text-sm text-muted-foreground">বুয়ার টাকা</p>
+            <p className="text-2xl font-bold text-accent-foreground">{formatTaka(monthlyStats.totalMaidPayments)}</p>
           </div>
           <div className="bg-success/10 rounded-lg p-4">
             <p className="text-sm text-muted-foreground">মোট জমা</p>
             <p className="text-2xl font-bold text-success">{formatTaka(monthlyStats.totalDeposits)}</p>
           </div>
-          <div className="bg-muted/50 rounded-lg p-4">
+          <div className={`rounded-lg p-4 ${totalBalance >= 0 ? 'bg-success/10' : 'bg-destructive/10'}`}>
             <p className="text-sm text-muted-foreground">ক্যাশ ব্যালেন্স</p>
-            <p className={`text-2xl font-bold ${monthlyStats.totalDeposits - monthlyStats.totalExpenses >= 0 ? 'text-success' : 'text-destructive'}`}>
-              {formatTaka(monthlyStats.totalDeposits - monthlyStats.totalExpenses)}
+            <p className={`text-2xl font-bold ${totalBalance >= 0 ? 'text-success' : 'text-destructive'}`}>
+              {totalBalance >= 0 ? '+' : ''}{formatTaka(totalBalance)}
             </p>
           </div>
           <div className="bg-primary/10 rounded-lg p-4 col-span-2">
