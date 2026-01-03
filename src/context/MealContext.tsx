@@ -267,10 +267,18 @@ export function MealProvider({ children }: { children: ReactNode }) {
     const currentMonth = now.getMonth();
     const currentYear = now.getFullYear();
     
-    const monthlyMeals = meals.filter(m => {
-      const mealDate = new Date(m.date);
-      return mealDate.getMonth() === currentMonth && mealDate.getFullYear() === currentYear;
-    });
+    // Helper to parse date string correctly without timezone issues
+    const parseDate = (dateStr: string) => {
+      const [year, month, day] = dateStr.split('-').map(Number);
+      return { year, month: month - 1, day }; // month is 0-indexed
+    };
+    
+    const isCurrentMonth = (dateStr: string) => {
+      const { year, month } = parseDate(dateStr);
+      return month === currentMonth && year === currentYear;
+    };
+    
+    const monthlyMeals = meals.filter(m => isCurrentMonth(m.date));
 
     const totalMeals = monthlyMeals.reduce((acc, m) => {
       const lunchCount = m.lunchCount ?? (m.lunch ? 1 : 0);
@@ -279,32 +287,16 @@ export function MealProvider({ children }: { children: ReactNode }) {
       return acc + (lunchCount * 1) + (dinnerCount * 0.5);
     }, 0);
 
-    const monthlyExpenses = expenses.filter(e => {
-      const expDate = new Date(e.date);
-      return expDate.getMonth() === currentMonth && expDate.getFullYear() === currentYear;
-    });
-
+    const monthlyExpenses = expenses.filter(e => isCurrentMonth(e.date));
     const totalExpenses = monthlyExpenses.reduce((acc, e) => acc + e.amount, 0);
 
-    const monthlyExtraExpenses = extraExpenses.filter(e => {
-      const expDate = new Date(e.date);
-      return expDate.getMonth() === currentMonth && expDate.getFullYear() === currentYear;
-    });
-
+    const monthlyExtraExpenses = extraExpenses.filter(e => isCurrentMonth(e.date));
     const totalExtraExpenses = monthlyExtraExpenses.reduce((acc, e) => acc + e.amount, 0);
 
-    const monthlyDeposits = deposits.filter(d => {
-      const depDate = new Date(d.date);
-      return depDate.getMonth() === currentMonth && depDate.getFullYear() === currentYear;
-    });
-
+    const monthlyDeposits = deposits.filter(d => isCurrentMonth(d.date));
     const totalDeposits = monthlyDeposits.reduce((acc, d) => acc + d.amount, 0);
 
-    const monthlyMaidPayments = maidPayments.filter(p => {
-      const payDate = new Date(p.date);
-      return payDate.getMonth() === currentMonth && payDate.getFullYear() === currentYear;
-    });
-
+    const monthlyMaidPayments = maidPayments.filter(p => isCurrentMonth(p.date));
     const totalMaidPayments = monthlyMaidPayments.reduce((acc, p) => acc + p.amount, 0);
 
     // মিল রেট শুধু দৈনিক বাজার খরচের উপর ভিত্তি করে (অতিরিক্ত বাজার বাদে)
