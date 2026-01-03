@@ -279,8 +279,8 @@ export function MealProvider({ children }: { children: ReactNode }) {
     const totalDeposits = deposits.reduce((acc, d) => acc + d.amount, 0);
     const totalMaidPayments = maidPayments.reduce((acc, p) => acc + p.amount, 0);
 
-    // মিল রেট শুধু দৈনিক বাজার খরচের উপর ভিত্তি করে (অতিরিক্ত বাজার বাদে)
-    const mealRate = totalMeals > 0 ? totalExpenses / totalMeals : 0;
+    // মিল রেট = (বাজার খরচ + অতিরিক্ত খরচ) / মোট মিল
+    const mealRate = totalMeals > 0 ? (totalExpenses + totalExtraExpenses) / totalMeals : 0;
 
     return { totalMeals, totalExpenses, totalExtraExpenses, totalDeposits, totalMaidPayments, mealRate };
   };
