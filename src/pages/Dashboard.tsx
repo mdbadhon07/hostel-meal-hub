@@ -2,12 +2,13 @@ import { useMeal } from '@/context/MealContext';
 import StatCard from '@/components/StatCard';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { UtensilsCrossed, Moon, Sun, Wallet, PiggyBank, TrendingUp, TrendingDown, HandCoins, Settings, ShoppingBag } from 'lucide-react';
+import { UtensilsCrossed, Moon, Sun, Wallet, PiggyBank, TrendingUp, TrendingDown, HandCoins, Settings, ShoppingBag, Store } from 'lucide-react';
 
 export default function Dashboard() {
-  const { getTodayStats, getMonthlyStats, members } = useMeal();
+  const { getTodayStats, getMonthlyStats, getShopBalance, members } = useMeal();
   const todayStats = getTodayStats();
   const monthlyStats = getMonthlyStats();
+  const shopBalance = getShopBalance();
   const activeMembers = members.filter(m => m.isActive).length;
   const totalAllExpenses = monthlyStats.totalExpenses + monthlyStats.totalExtraExpenses;
   const cashBalance = monthlyStats.totalDeposits - totalAllExpenses - monthlyStats.totalMaidPayments;
@@ -59,6 +60,37 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      {/* Shop Balance - বাবু মদি স্টোর */}
+      <Link to="/shop-account">
+        <div className={`rounded-xl p-4 mb-6 border-2 cursor-pointer hover:opacity-90 transition-opacity ${
+          shopBalance.balance > 0 
+            ? 'bg-destructive/10 border-destructive/30' 
+            : 'bg-success/10 border-success/30'
+        }`}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                shopBalance.balance > 0 ? 'bg-destructive/20' : 'bg-success/20'
+              }`}>
+                <Store size={22} className={shopBalance.balance > 0 ? 'text-destructive' : 'text-success'} />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">বাবু মদি স্টোর</p>
+                <p className={`text-xl font-bold ${
+                  shopBalance.balance > 0 ? 'text-destructive' : 'text-success'
+                }`}>
+                  {shopBalance.balance > 0 ? 'বাকি: ' : 'অগ্রিম: '}৳{Math.abs(shopBalance.balance).toLocaleString('bn-BD')}
+                </p>
+              </div>
+            </div>
+            <div className="text-right text-xs text-muted-foreground">
+              <p>বাজার: ৳{shopBalance.totalPurchase.toLocaleString('bn-BD')}</p>
+              <p>জমা: ৳{shopBalance.totalPayment.toLocaleString('bn-BD')}</p>
+            </div>
+          </div>
+        </div>
+      </Link>
       
       {/* Today's Stats */}
       <div className="mb-8">
