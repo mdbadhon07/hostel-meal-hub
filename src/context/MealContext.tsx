@@ -39,7 +39,7 @@ interface MealContextType {
   getShopBalance: () => { totalPurchase: number; totalPayment: number; balance: number };
   getMealsForDate: (date: string) => DailyMeal[];
   getTodayStats: () => { lunch: number; dinner: number; total: number };
-  getMonthlyStats: (month?: number, year?: number) => { totalMeals: number; totalExpenses: number; totalExtraExpenses: number; totalDeposits: number; totalMaidPayments: number; mealRate: number };
+  getMonthlyStats: () => { totalMeals: number; totalExpenses: number; totalExtraExpenses: number; totalDeposits: number; totalMaidPayments: number; mealRate: number };
   getMemberSummaries: () => MemberSummary[];
   exportData: () => string;
   importData: (jsonString: string) => boolean;
@@ -262,42 +262,19 @@ export function MealProvider({ children }: { children: ReactNode }) {
     return { lunch, dinner, total: lunch + dinner };
   };
 
-  const getMonthlyStats = (month?: number, year?: number) => {
-    const now = new Date();
-    const targetMonth = month ?? now.getMonth();
-    const targetYear = year ?? now.getFullYear();
-    
-    // Helper to parse date string correctly without timezone issues
-    const parseDate = (dateStr: string) => {
-      const [y, m, d] = dateStr.split('-').map(Number);
-      return { year: y, month: m - 1, day: d }; // month is 0-indexed
-    };
-    
-    const isTargetMonth = (dateStr: string) => {
-      const { year: y, month: m } = parseDate(dateStr);
-      return m === targetMonth && y === targetYear;
-    };
-    
-    const monthlyMeals = meals.filter(m => isTargetMonth(m.date));
-
-    const totalMeals = monthlyMeals.reduce((acc, m) => {
+  const getMonthlyStats = () => {
+    // সব মাসের হিসাব একসাথে (কোন মাস ফিল্টার নেই)
+    const totalMeals = meals.reduce((acc, m) => {
       const lunchCount = m.lunchCount ?? (m.lunch ? 1 : 0);
       const dinnerCount = m.dinnerCount ?? (m.dinner ? 1 : 0);
       // দুপুর = ১ মিল, রাত = ০.৫ মিল
       return acc + (lunchCount * 1) + (dinnerCount * 0.5);
     }, 0);
 
-    const monthlyExpenses = expenses.filter(e => isTargetMonth(e.date));
-    const totalExpenses = monthlyExpenses.reduce((acc, e) => acc + e.amount, 0);
-
-    const monthlyExtraExpenses = extraExpenses.filter(e => isTargetMonth(e.date));
-    const totalExtraExpenses = monthlyExtraExpenses.reduce((acc, e) => acc + e.amount, 0);
-
-    const monthlyDeposits = deposits.filter(d => isTargetMonth(d.date));
-    const totalDeposits = monthlyDeposits.reduce((acc, d) => acc + d.amount, 0);
-
-    const monthlyMaidPayments = maidPayments.filter(p => isTargetMonth(p.date));
-    const totalMaidPayments = monthlyMaidPayments.reduce((acc, p) => acc + p.amount, 0);
+    const totalExpenses = expenses.reduce((acc, e) => acc + e.amount, 0);
+    const totalExtraExpenses = extraExpenses.reduce((acc, e) => acc + e.amount, 0);
+    const totalDeposits = deposits.reduce((acc, d) => acc + d.amount, 0);
+    const totalMaidPayments = maidPayments.reduce((acc, p) => acc + p.amount, 0);
 
     // মিল রেট শুধু দৈনিক বাজার খরচের উপর ভিত্তি করে (অতিরিক্ত বাজার বাদে)
     const mealRate = totalMeals > 0 ? totalExpenses / totalMeals : 0;
