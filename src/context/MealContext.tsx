@@ -83,17 +83,9 @@ export function MealProvider({ children }: { children: ReactNode }) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [members, setMembers] = useState<Member[]>(defaultMembers);
   const [meals, setMeals] = useState<DailyMeal[]>([]);
-  const [expenses, setExpenses] = useState<Expense[]>([
-    { id: '1', date: '2026-01-01', item: 'চাল', amount: 3500 },
-    { id: '2', date: '2026-01-01', item: 'মাছ', amount: 1200 },
-    { id: '3', date: '2026-01-02', item: 'সবজি', amount: 800 },
-  ]);
+  const [expenses, setExpenses] = useState<Expense[]>([]);
   const [extraExpenses, setExtraExpenses] = useState<ExtraExpense[]>([]);
-  const [deposits, setDeposits] = useState<Deposit[]>([
-    { id: '1', date: '2026-01-01', memberId: '1', amount: 2000 },
-    { id: '2', date: '2026-01-01', memberId: '2', amount: 1500 },
-    { id: '3', date: '2026-01-02', memberId: '3', amount: 2000 },
-  ]);
+  const [deposits, setDeposits] = useState<Deposit[]>([]);
   const [maidPayments, setMaidPayments] = useState<MaidPayment[]>([]);
   const [shopTransactions, setShopTransactions] = useState<ShopTransaction[]>([]);
 
@@ -103,17 +95,9 @@ export function MealProvider({ children }: { children: ReactNode }) {
     if (stored) {
       setMembers(stored.members?.length > 0 ? stored.members : defaultMembers);
       setMeals(stored.meals || []);
-      setExpenses(stored.expenses?.length > 0 ? stored.expenses : [
-        { id: '1', date: '2026-01-01', item: 'চাল', amount: 3500 },
-        { id: '2', date: '2026-01-01', item: 'মাছ', amount: 1200 },
-        { id: '3', date: '2026-01-02', item: 'সবজি', amount: 800 },
-      ]);
+      setExpenses(stored.expenses || []);
       setExtraExpenses(stored.extraExpenses || []);
-      setDeposits(stored.deposits?.length > 0 ? stored.deposits : [
-        { id: '1', date: '2026-01-01', memberId: '1', amount: 2000 },
-        { id: '2', date: '2026-01-01', memberId: '2', amount: 1500 },
-        { id: '3', date: '2026-01-02', memberId: '3', amount: 2000 },
-      ]);
+      setDeposits(stored.deposits || []);
       setMaidPayments(stored.maidPayments || []);
       setShopTransactions(stored.shopTransactions || []);
     }
