@@ -257,9 +257,12 @@ export function MealProvider({ children }: { children: ReactNode }) {
   const getTodayStats = () => {
     const today = new Date().toISOString().split('T')[0];
     const todayMeals = meals.filter(m => m.date === today);
-    const lunch = todayMeals.filter(m => m.lunch).length;
-    const dinner = todayMeals.filter(m => m.dinner).length;
-    return { lunch, dinner, total: lunch + dinner };
+    // lunchCount এবং dinnerCount সাপোর্ট সহ
+    const lunchCount = todayMeals.reduce((acc, m) => acc + (m.lunchCount ?? (m.lunch ? 1 : 0)), 0);
+    const dinnerCount = todayMeals.reduce((acc, m) => acc + (m.dinnerCount ?? (m.dinner ? 1 : 0)), 0);
+    // দুপুর = ১ মিল, রাত = ০.৫ মিল
+    const total = (lunchCount * 1) + (dinnerCount * 0.5);
+    return { lunch: lunchCount, dinner: dinnerCount, total };
   };
 
   const getMonthlyStats = () => {
