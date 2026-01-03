@@ -48,7 +48,7 @@ export default function DailyMeal() {
   };
 
   const handleMealCountChange = (memberId: string, type: 'lunch' | 'dinner', value: string) => {
-    const count = parseInt(value) || 0;
+    const count = parseFloat(value) || 0;
     updateMealCount(selectedDate, memberId, type, Math.max(0, count));
   };
 
@@ -180,6 +180,7 @@ export default function DailyMeal() {
                       <Input
                         type="number"
                         min="0"
+                        step="0.5"
                         value={getMealCount(member.id, 'dinner')}
                         onChange={(e) => handleMealCountChange(member.id, 'dinner', e.target.value)}
                         className="w-16 h-10 text-center"
