@@ -1,5 +1,6 @@
 import { useMeal } from '@/context/MealContext';
-import { TrendingUp, TrendingDown, Minus, Wallet } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import MemberMealsChart from '@/components/MemberMealsChart';
 
 export default function Reports() {
   const { getMonthlyStats, getMemberSummaries } = useMeal();
@@ -23,6 +24,9 @@ export default function Reports() {
   return (
     <div>
       <h1 className="page-title">সর্বমোট রিপোর্ট</h1>
+
+      {/* Member Meals Chart */}
+      <MemberMealsChart />
 
       {/* Total Overview */}
       <div className="bg-card rounded-lg border border-border p-4 mb-6">
