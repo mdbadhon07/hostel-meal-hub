@@ -2,14 +2,15 @@ import { useMeal } from '@/context/MealContext';
 import StatCard from '@/components/StatCard';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { UtensilsCrossed, Moon, Sun, Wallet, PiggyBank, TrendingUp, TrendingDown, HandCoins, Settings } from 'lucide-react';
+import { UtensilsCrossed, Moon, Sun, Wallet, PiggyBank, TrendingUp, TrendingDown, HandCoins, Settings, ShoppingBag } from 'lucide-react';
 
 export default function Dashboard() {
   const { getTodayStats, getMonthlyStats, members } = useMeal();
   const todayStats = getTodayStats();
   const monthlyStats = getMonthlyStats();
   const activeMembers = members.filter(m => m.isActive).length;
-  const cashBalance = monthlyStats.totalDeposits - monthlyStats.totalExpenses - monthlyStats.totalMaidPayments;
+  const totalAllExpenses = monthlyStats.totalExpenses + monthlyStats.totalExtraExpenses;
+  const cashBalance = monthlyStats.totalDeposits - totalAllExpenses - monthlyStats.totalMaidPayments;
 
   const formatTaka = (amount: number) => {
     return `৳${Math.abs(amount).toLocaleString('bn-BD', { maximumFractionDigits: 0 })}`;
@@ -52,7 +53,8 @@ export default function Dashboard() {
           </div>
           <div className="text-right text-sm text-muted-foreground">
             <p>জমা: <span className="text-success font-medium">{formatTaka(monthlyStats.totalDeposits)}</span></p>
-            <p>খরচ: <span className="text-warning font-medium">{formatTaka(monthlyStats.totalExpenses)}</span></p>
+            <p>বাজার: <span className="text-warning font-medium">{formatTaka(monthlyStats.totalExpenses)}</span></p>
+            <p>অতিরিক্ত: <span className="text-purple-500 font-medium">{formatTaka(monthlyStats.totalExtraExpenses)}</span></p>
             <p>বুয়া: <span className="text-accent font-medium">{formatTaka(monthlyStats.totalMaidPayments)}</span></p>
           </div>
         </div>
@@ -98,9 +100,15 @@ export default function Dashboard() {
           />
           <StatCard 
             value={formatTaka(monthlyStats.totalExpenses)} 
-            label="মোট খরচ" 
+            label="বাজার খরচ" 
             icon={<Wallet size={28} />}
             variant="warning"
+          />
+          <StatCard 
+            value={formatTaka(monthlyStats.totalExtraExpenses)} 
+            label="অতিরিক্ত বাজার" 
+            icon={<ShoppingBag size={28} />}
+            variant="primary"
           />
           <StatCard 
             value={formatTaka(monthlyStats.totalDeposits)} 

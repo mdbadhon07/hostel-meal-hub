@@ -20,6 +20,14 @@ export interface Expense {
   amount: number;
 }
 
+export interface ExtraExpense {
+  id: string;
+  date: string;
+  item: string;
+  amount: number;
+  note?: string;
+}
+
 export interface Deposit {
   id: string;
   date: string;
