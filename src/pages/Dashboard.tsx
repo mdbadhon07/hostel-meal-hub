@@ -1,17 +1,33 @@
+import { useState } from 'react';
 import { useMeal } from '@/context/MealContext';
 import StatCard from '@/components/StatCard';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { UtensilsCrossed, Moon, Sun, Wallet, PiggyBank, TrendingUp, TrendingDown, HandCoins, Settings, ShoppingBag, Store } from 'lucide-react';
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { UtensilsCrossed, Moon, Sun, Wallet, PiggyBank, TrendingUp, TrendingDown, HandCoins, Settings, ShoppingBag, Store, ChevronLeft, ChevronRight } from 'lucide-react';
 
 export default function Dashboard() {
   const { getTodayStats, getMonthlyStats, getShopBalance, members } = useMeal();
   const todayStats = getTodayStats();
-  const monthlyStats = getMonthlyStats();
   const shopBalance = getShopBalance();
   const activeMembers = members.filter(m => m.isActive).length;
+
+  const today = new Date();
+  const [selectedMonth, setSelectedMonth] = useState(today.getMonth());
+  const [selectedYear, setSelectedYear] = useState(today.getFullYear());
+
+  const monthlyStats = getMonthlyStats(selectedMonth, selectedYear);
   const totalAllExpenses = monthlyStats.totalExpenses + monthlyStats.totalExtraExpenses;
   const cashBalance = monthlyStats.totalDeposits - totalAllExpenses - monthlyStats.totalMaidPayments;
+
+  const bengaliMonths = ['জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন', 
+                         'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'];
 
   const toBengaliNumber = (num: number): string => {
     const bengaliDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
@@ -24,14 +40,81 @@ export default function Dashboard() {
     return `৳${toBengaliNumber(absAmount)}`;
   };
 
-  const today = new Date();
-  const bengaliMonths = ['জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন', 
-                         'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'];
-  const currentMonth = bengaliMonths[today.getMonth()];
+  const goToPreviousMonth = () => {
+    if (selectedMonth === 0) {
+      setSelectedMonth(11);
+      setSelectedYear(selectedYear - 1);
+    } else {
+      setSelectedMonth(selectedMonth - 1);
+    }
+  };
+
+  const goToNextMonth = () => {
+    if (selectedMonth === 11) {
+      setSelectedMonth(0);
+      setSelectedYear(selectedYear + 1);
+    } else {
+      setSelectedMonth(selectedMonth + 1);
+    }
+  };
+
+  const isCurrentMonth = selectedMonth === today.getMonth() && selectedYear === today.getFullYear();
+
+  // Generate year options (current year and previous 2 years)
+  const yearOptions = [today.getFullYear(), today.getFullYear() - 1, today.getFullYear() - 2];
 
   return (
     <div>
       <h1 className="page-title">ড্যাশবোর্ড</h1>
+
+      {/* Month Selector */}
+      <div className="flex items-center justify-center gap-2 mb-6 bg-card rounded-lg border border-border p-3">
+        <Button variant="ghost" size="icon" onClick={goToPreviousMonth}>
+          <ChevronLeft size={20} />
+        </Button>
+        
+        <div className="flex items-center gap-2">
+          <Select value={selectedMonth.toString()} onValueChange={(v) => setSelectedMonth(parseInt(v))}>
+            <SelectTrigger className="w-32">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {bengaliMonths.map((month, index) => (
+                <SelectItem key={index} value={index.toString()}>{month}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          
+          <Select value={selectedYear.toString()} onValueChange={(v) => setSelectedYear(parseInt(v))}>
+            <SelectTrigger className="w-24">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {yearOptions.map((year) => (
+                <SelectItem key={year} value={year.toString()}>{toBengaliNumber(year)}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <Button variant="ghost" size="icon" onClick={goToNextMonth}>
+          <ChevronRight size={20} />
+        </Button>
+        
+        {!isCurrentMonth && (
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => {
+              setSelectedMonth(today.getMonth());
+              setSelectedYear(today.getFullYear());
+            }}
+            className="ml-2"
+          >
+            এই মাস
+          </Button>
+        )}
+      </div>
 
       {/* Cash Balance Highlight */}
       <div className={`rounded-xl p-5 mb-6 border-2 ${
@@ -51,7 +134,7 @@ export default function Dashboard() {
               )}
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">ক্যাশ ব্যালেন্স</p>
+              <p className="text-sm text-muted-foreground">ক্যাশ ব্যালেন্স ({bengaliMonths[selectedMonth]})</p>
               <p className={`text-3xl font-bold ${
                 cashBalance >= 0 ? 'text-success' : 'text-destructive'
               }`}>
@@ -99,37 +182,39 @@ export default function Dashboard() {
         </div>
       </Link>
       
-      {/* Today's Stats */}
-      <div className="mb-8">
-        <h2 className="text-lg font-semibold text-foreground mb-4">আজকের মিল</h2>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard 
-            value={todayStats.lunch} 
-            label="দুপুরের খাবার" 
-            icon={<Sun size={28} />}
-            variant="primary"
-          />
-          <StatCard 
-            value={todayStats.dinner} 
-            label="রাতের খাবার" 
-            icon={<Moon size={28} />}
-            variant="primary"
-          />
-          <StatCard 
-            value={todayStats.total} 
-            label="মোট মিল" 
-            icon={<UtensilsCrossed size={28} />}
-          />
-          <StatCard 
-            value={activeMembers} 
-            label="সক্রিয় সদস্য" 
-          />
+      {/* Today's Stats - only show for current month */}
+      {isCurrentMonth && (
+        <div className="mb-8">
+          <h2 className="text-lg font-semibold text-foreground mb-4">আজকের মিল</h2>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <StatCard 
+              value={todayStats.lunch} 
+              label="দুপুরের খাবার" 
+              icon={<Sun size={28} />}
+              variant="primary"
+            />
+            <StatCard 
+              value={todayStats.dinner} 
+              label="রাতের খাবার" 
+              icon={<Moon size={28} />}
+              variant="primary"
+            />
+            <StatCard 
+              value={todayStats.total} 
+              label="মোট মিল" 
+              icon={<UtensilsCrossed size={28} />}
+            />
+            <StatCard 
+              value={activeMembers} 
+              label="সক্রিয় সদস্য" 
+            />
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Monthly Stats */}
       <div className="mb-8">
-        <h2 className="text-lg font-semibold text-foreground mb-4">{currentMonth} মাসের হিসাব</h2>
+        <h2 className="text-lg font-semibold text-foreground mb-4">{bengaliMonths[selectedMonth]} {toBengaliNumber(selectedYear)} মাসের হিসাব</h2>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard 
             value={monthlyStats.totalMeals} 
@@ -174,7 +259,7 @@ export default function Dashboard() {
         <div className="space-y-3 text-muted-foreground">
           <p>• মোট সদস্য সংখ্যা: <span className="text-foreground font-medium">{members.length} জন</span></p>
           <p>• সক্রিয় সদস্য: <span className="text-foreground font-medium">{activeMembers} জন</span></p>
-          <p>• এই মাসের মিল রেট: <span className="text-foreground font-medium">{formatTaka(monthlyStats.mealRate)}</span></p>
+          <p>• {bengaliMonths[selectedMonth]} মাসের মিল রেট: <span className="text-foreground font-medium">{formatTaka(monthlyStats.mealRate)}</span></p>
           <p>• প্রতি সদস্যের গড় মিল: <span className="text-foreground font-medium">
             {activeMembers > 0 ? (monthlyStats.totalMeals / activeMembers).toFixed(1) : 0}
           </span></p>
