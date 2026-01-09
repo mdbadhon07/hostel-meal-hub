@@ -21,6 +21,15 @@ export default function Reports() {
   // Calculate total balance
   const totalBalance = monthlyStats.totalDeposits - monthlyStats.totalExpenses - monthlyStats.totalExtraExpenses - monthlyStats.totalMaidPayments;
 
+  // Calculate total positive and negative balances
+  const totalPositiveBalance = summaries
+    .filter(s => s.balance > 0)
+    .reduce((sum, s) => sum + s.balance, 0);
+  
+  const totalNegativeBalance = summaries
+    .filter(s => s.balance < 0)
+    .reduce((sum, s) => sum + Math.abs(s.balance), 0);
+
   return (
     <div>
       <h1 className="page-title">সর্বমোট রিপোর্ট</h1>
@@ -64,6 +73,31 @@ export default function Reports() {
               {formatTaka(monthlyStats.mealRate)}
               <span className="text-sm font-normal text-muted-foreground ml-2">/ মিল</span>
             </p>
+          </div>
+        </div>
+
+        {/* Balance Summary */}
+        <div className="mt-4 pt-4 border-t border-border">
+          <h3 className="text-sm font-semibold text-muted-foreground mb-3">ব্যালেন্স সামারি</h3>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="bg-success/10 rounded-lg p-4 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-success/20 flex items-center justify-center">
+                <TrendingUp className="text-success" size={20} />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">মোট পাওনা</p>
+                <p className="text-xl font-bold text-success">{formatTaka(totalPositiveBalance)}</p>
+              </div>
+            </div>
+            <div className="bg-destructive/10 rounded-lg p-4 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-destructive/20 flex items-center justify-center">
+                <TrendingDown className="text-destructive" size={20} />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">মোট বাকি</p>
+                <p className="text-xl font-bold text-destructive">{formatTaka(totalNegativeBalance)}</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
