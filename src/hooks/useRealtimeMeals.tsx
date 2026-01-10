@@ -1,6 +1,7 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { RealtimeChannel } from '@supabase/supabase-js';
+import { playNotificationSound } from '@/lib/sounds';
 
 export interface DailyMealRecord {
   id: string;
@@ -29,6 +30,8 @@ export function useRealtimeMeals(date?: string) {
   const [members, setMembers] = useState<MemberRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [lastUpdate, setLastUpdate] = useState<{ type: string; memberName: string } | null>(null);
+  const isInitialLoad = useRef(true);
 
   const targetDate = date || new Date().toISOString().split('T')[0];
 
@@ -61,7 +64,12 @@ export function useRealtimeMeals(date?: string) {
   }, [targetDate]);
 
   useEffect(() => {
-    fetchData();
+    fetchData().then(() => {
+      // Mark initial load as complete after first fetch
+      setTimeout(() => {
+        isInitialLoad.current = false;
+      }, 1000);
+    });
 
     // Subscribe to realtime changes
     const channel: RealtimeChannel = supabase
@@ -77,8 +85,21 @@ export function useRealtimeMeals(date?: string) {
         (payload) => {
           console.log('[Realtime] Meal change:', payload);
           
+          // Find member name for the notification
+          const getMemberName = (memberId: string) => {
+            const member = members.find(m => m.id === memberId);
+            return member?.name || 'সদস্য';
+          };
+          
           if (payload.eventType === 'INSERT') {
             setMeals((prev) => [...prev, payload.new as DailyMealRecord]);
+            
+            // Play sound only after initial load
+            if (!isInitialLoad.current) {
+              playNotificationSound();
+              const memberName = getMemberName((payload.new as DailyMealRecord).member_id);
+              setLastUpdate({ type: 'নতুন মিল জমা', memberName });
+            }
           } else if (payload.eventType === 'UPDATE') {
             setMeals((prev) =>
               prev.map((m) =>
@@ -87,6 +108,13 @@ export function useRealtimeMeals(date?: string) {
                   : m
               )
             );
+            
+            // Play sound for updates too
+            if (!isInitialLoad.current) {
+              playNotificationSound();
+              const memberName = getMemberName((payload.new as DailyMealRecord).member_id);
+              setLastUpdate({ type: 'মিল আপডেট', memberName });
+            }
           } else if (payload.eventType === 'DELETE') {
             setMeals((prev) =>
               prev.filter((m) => m.id !== (payload.old as DailyMealRecord).id)
@@ -99,7 +127,7 @@ export function useRealtimeMeals(date?: string) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [targetDate, fetchData]);
+  }, [targetDate, fetchData, members]);
 
   // Calculate stats
   const stats = {
@@ -126,5 +154,6 @@ export function useRealtimeMeals(date?: string) {
     stats,
     getMealForMember,
     refetch: fetchData,
+    lastUpdate,
   };
 }
