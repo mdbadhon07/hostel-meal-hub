@@ -39,27 +39,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let mounted = true;
 
+    // Failsafe: never block the UI forever
+    const loadingTimeout = window.setTimeout(() => {
+      if (mounted) {
+        console.warn('[auth] init timeout - continuing without blocking UI');
+        setLoading(false);
+      }
+    }, 4000);
+
     // Get initial session
     const initializeAuth = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
-        
+
         if (!mounted) return;
 
         if (session?.user) {
           setSession(session);
           setUser(session.user);
           const adminStatus = await checkAdminRole(session.user.id);
-          if (mounted) {
-            setIsAdmin(adminStatus);
-          }
+          if (mounted) setIsAdmin(adminStatus);
         }
       } catch (error) {
         console.error('Auth initialization error:', error);
       } finally {
-        if (mounted) {
-          setLoading(false);
-        }
+        if (mounted) setLoading(false);
       }
     };
 
@@ -67,27 +71,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      async (_event, session) => {
         if (!mounted) return;
 
         setSession(session);
         setUser(session?.user ?? null);
-        
+
         if (session?.user) {
           const adminStatus = await checkAdminRole(session.user.id);
-          if (mounted) {
-            setIsAdmin(adminStatus);
-          }
+          if (mounted) setIsAdmin(adminStatus);
         } else {
           setIsAdmin(false);
         }
-        
+
         setLoading(false);
       }
     );
 
     return () => {
       mounted = false;
+      window.clearTimeout(loadingTimeout);
       subscription.unsubscribe();
     };
   }, []);
