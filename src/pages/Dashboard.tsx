@@ -1,5 +1,6 @@
 import { useMeal } from '@/context/MealContext';
 import StatCard from '@/components/StatCard';
+import RealtimeMealStatus from '@/components/RealtimeMealStatus';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { UtensilsCrossed, Moon, Sun, Wallet, PiggyBank, TrendingUp, TrendingDown, HandCoins, Settings, ShoppingBag, Store } from 'lucide-react';
@@ -94,9 +95,15 @@ export default function Dashboard() {
         </div>
       </Link>
       
+      {/* Realtime Meal Status */}
+      <div className="mb-8">
+        <h2 className="text-lg font-semibold text-foreground mb-4">লাইভ মিল স্ট্যাটাস 🔴</h2>
+        <RealtimeMealStatus />
+      </div>
+      
       {/* Today's Stats */}
       <div className="mb-8">
-        <h2 className="text-lg font-semibold text-foreground mb-4">আজকের মিল</h2>
+        <h2 className="text-lg font-semibold text-foreground mb-4">আজকের মিল (লোকাল)</h2>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard 
             value={todayStats.lunch} 
