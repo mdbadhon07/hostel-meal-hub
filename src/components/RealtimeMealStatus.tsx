@@ -1,9 +1,21 @@
+import { useEffect } from 'react';
 import { useRealtimeMeals } from '@/hooks/useRealtimeMeals';
-import { Check, X, Clock, Users, RefreshCw } from 'lucide-react';
+import { Check, X, Clock, Users, RefreshCw, Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 export default function RealtimeMealStatus() {
-  const { members, meals, stats, getMealForMember, loading, refetch } = useRealtimeMeals();
+  const { members, meals, stats, getMealForMember, loading, refetch, lastUpdate } = useRealtimeMeals();
+
+  // Show toast notification when meal is submitted
+  useEffect(() => {
+    if (lastUpdate) {
+      toast.success(`${lastUpdate.memberName} - ${lastUpdate.type}`, {
+        icon: <Bell className="text-primary" size={18} />,
+        duration: 3000,
+      });
+    }
+  }, [lastUpdate]);
 
   const toBengaliNumber = (num: number): string => {
     const bengaliDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
