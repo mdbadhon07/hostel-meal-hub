@@ -7,9 +7,24 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   isAdmin: boolean;
+  configError: string | null;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signUp: (email: string, password: string, name: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
+}
+
+// Check if backend is configured
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+
+function getConfigError(): string | null {
+  if (!SUPABASE_URL || SUPABASE_URL === 'undefined') {
+    return 'Backend URL কনফিগার করা হয়নি। অনুগ্রহ করে VITE_SUPABASE_URL সেট করুন।';
+  }
+  if (!SUPABASE_KEY || SUPABASE_KEY === 'undefined') {
+    return 'Backend API Key কনফিগার করা হয়নি। অনুগ্রহ করে VITE_SUPABASE_PUBLISHABLE_KEY সেট করুন।';
+  }
+  return null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -19,6 +34,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [configError] = useState<string | null>(getConfigError());
 
   const checkAdminRole = async (userId: string) => {
     try {
@@ -121,7 +137,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, isAdmin, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={{ user, session, loading, isAdmin, configError, signIn, signUp, signOut }}>
       {children}
     </AuthContext.Provider>
   );
