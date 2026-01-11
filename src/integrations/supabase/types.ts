@@ -14,150 +14,16 @@ export type Database = {
   }
   public: {
     Tables: {
-      daily_meals: {
-        Row: {
-          created_at: string
-          date: string
-          dinner: boolean
-          dinner_count: number
-          id: string
-          lunch: boolean
-          lunch_count: number
-          member_id: string
-          submitted_at: string | null
-          submitted_by: string | null
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          date: string
-          dinner?: boolean
-          dinner_count?: number
-          id?: string
-          lunch?: boolean
-          lunch_count?: number
-          member_id: string
-          submitted_at?: string | null
-          submitted_by?: string | null
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          date?: string
-          dinner?: boolean
-          dinner_count?: number
-          id?: string
-          lunch?: boolean
-          lunch_count?: number
-          member_id?: string
-          submitted_at?: string | null
-          submitted_by?: string | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "daily_meals_member_id_fkey"
-            columns: ["member_id"]
-            isOneToOne: false
-            referencedRelation: "members"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      members: {
-        Row: {
-          created_at: string
-          email: string | null
-          id: string
-          is_active: boolean
-          name: string
-          updated_at: string
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string
-          email?: string | null
-          id?: string
-          is_active?: boolean
-          name: string
-          updated_at?: string
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string
-          email?: string | null
-          id?: string
-          is_active?: boolean
-          name?: string
-          updated_at?: string
-          user_id?: string | null
-        }
-        Relationships: []
-      }
-      profiles: {
-        Row: {
-          created_at: string
-          id: string
-          is_active: boolean
-          name: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          is_active?: boolean
-          name: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          is_active?: boolean
-          name?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      user_roles: {
-        Row: {
-          created_at: string
-          id: string
-          role: Database["public"]["Enums"]["app_role"]
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          role: Database["public"]["Enums"]["app_role"]
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          role?: Database["public"]["Enums"]["app_role"]
-          user_id?: string
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      has_role: {
-        Args: {
-          _role: Database["public"]["Enums"]["app_role"]
-          _user_id: string
-        }
-        Returns: boolean
-      }
-      is_before_deadline: { Args: never; Returns: boolean }
+      [_ in never]: never
     }
     Enums: {
-      app_role: "admin" | "member"
+      [_ in never]: never
     }
     CompositeTypes: {
       [_ in never]: never
@@ -284,8 +150,6 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {
-      app_role: ["admin", "member"],
-    },
+    Enums: {},
   },
 } as const

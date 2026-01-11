@@ -1,6 +1,5 @@
 import { ReactNode, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
 import { 
   LayoutDashboard, 
   CalendarDays, 
@@ -11,11 +10,8 @@ import {
   X,
   Wallet,
   Settings,
-  Store,
-  UserCog,
-  LogOut
+  Store
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 
 interface LayoutProps {
   children: ReactNode;
@@ -27,7 +23,6 @@ const navItems = [
   { path: '/expenses', label: 'খরচ', icon: Receipt },
   { path: '/deposits', label: 'জমা', icon: Wallet },
   { path: '/members', label: 'সদস্য', icon: Users },
-  { path: '/admin-members', label: 'সদস্য অ্যাকাউন্ট', icon: UserCog },
   { path: '/shop-account', label: 'দোকান হিসাব', icon: Store },
   { path: '/reports', label: 'রিপোর্ট', icon: BarChart3 },
   { path: '/settings', label: 'সেটিংস', icon: Settings },
@@ -35,12 +30,7 @@ const navItems = [
 
 export default function Layout({ children }: LayoutProps) {
   const location = useLocation();
-  const { signOut, user } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
-  const handleLogout = async () => {
-    await signOut();
-  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -65,7 +55,7 @@ export default function Layout({ children }: LayoutProps) {
 
       {/* Sidebar */}
       <aside className={`
-        fixed top-0 left-0 z-50 h-full w-64 bg-card border-r border-border flex flex-col
+        fixed top-0 left-0 z-50 h-full w-64 bg-card border-r border-border
         transform transition-transform duration-200 ease-in-out
         lg:translate-x-0
         ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
@@ -75,7 +65,7 @@ export default function Layout({ children }: LayoutProps) {
           <p className="text-sm text-muted-foreground mt-1">মিল ও খরচ হিসাব</p>
         </div>
         
-        <nav className="p-4 mt-14 lg:mt-0 flex-1">
+        <nav className="p-4 mt-14 lg:mt-0">
           <ul className="space-y-2">
             {navItems.map(item => (
               <li key={item.path}>
@@ -91,23 +81,6 @@ export default function Layout({ children }: LayoutProps) {
             ))}
           </ul>
         </nav>
-
-        {/* Logout Button */}
-        <div className="p-4 border-t border-border">
-          {user && (
-            <div className="mb-3">
-              <p className="text-xs text-muted-foreground truncate">{user.email}</p>
-            </div>
-          )}
-          <Button 
-            onClick={handleLogout} 
-            variant="outline" 
-            className="w-full justify-start gap-2"
-          >
-            <LogOut size={18} />
-            লগআউট
-          </Button>
-        </div>
       </aside>
 
       {/* Main Content */}
