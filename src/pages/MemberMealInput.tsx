@@ -59,7 +59,11 @@ export default function MemberMealInput() {
   // Fetch member data
   useEffect(() => {
     async function fetchMemberData() {
-      if (!user) return;
+      // Failsafe: never keep this screen in an infinite "loading" state
+      if (!user) {
+        setLoading(false);
+        return;
+      }
 
       try {
         // Get member linked to this user
