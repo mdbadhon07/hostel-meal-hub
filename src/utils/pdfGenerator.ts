@@ -1,19 +1,6 @@
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 import { MemberSummary } from '@/types';
-
-// Add type declaration for autoTable
-declare module 'jspdf' {
-  interface jsPDF {
-    autoTable: (options: any) => jsPDF;
-    lastAutoTable: { finalY: number };
-  }
-}
-
-const toBengaliNumber = (num: number): string => {
-  const bengaliDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
-  return Math.round(num).toString().split('').map(d => bengaliDigits[parseInt(d)] || d).join('');
-};
 
 const formatTaka = (amount: number) => {
   const absAmount = Math.abs(amount);
@@ -47,7 +34,7 @@ export const generateTotalReportPDF = (
   // Date
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
-  doc.text(`Generated: ${new Date().toLocaleDateString('bn-BD')}`, pageWidth / 2, 28, { align: 'center' });
+  doc.text(`Generated: ${new Date().toLocaleDateString()}`, pageWidth / 2, 28, { align: 'center' });
   
   // Summary Section
   doc.setFontSize(14);
@@ -56,7 +43,7 @@ export const generateTotalReportPDF = (
   
   const totalBalance = monthlyStats.totalDeposits - monthlyStats.totalExpenses - monthlyStats.totalExtraExpenses - monthlyStats.totalMaidPayments;
   
-  doc.autoTable({
+  autoTable(doc, {
     startY: 45,
     head: [['Item', 'Amount']],
     body: [
@@ -73,12 +60,12 @@ export const generateTotalReportPDF = (
   });
   
   // Balance Summary
-  const currentY = doc.lastAutoTable.finalY + 10;
+  const currentY = (doc as any).lastAutoTable.finalY + 10;
   doc.setFontSize(14);
   doc.setFont('helvetica', 'bold');
   doc.text('Balance Summary', 14, currentY);
   
-  doc.autoTable({
+  autoTable(doc, {
     startY: currentY + 5,
     head: [['Type', 'Amount']],
     body: [
@@ -90,12 +77,12 @@ export const generateTotalReportPDF = (
   });
   
   // Member Details
-  const memberY = doc.lastAutoTable.finalY + 10;
+  const memberY = (doc as any).lastAutoTable.finalY + 10;
   doc.setFontSize(14);
   doc.setFont('helvetica', 'bold');
   doc.text('Member-wise Details', 14, memberY);
   
-  doc.autoTable({
+  autoTable(doc, {
     startY: memberY + 5,
     head: [['Name', 'Meals', 'Cost', 'Deposit', 'Balance', 'Status']],
     body: summaries.map(s => [
@@ -134,14 +121,14 @@ export const generateMemberReportPDF = (
   // Date
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
-  doc.text(`Generated: ${new Date().toLocaleDateString('bn-BD')}`, pageWidth / 2, 28, { align: 'center' });
+  doc.text(`Generated: ${new Date().toLocaleDateString()}`, pageWidth / 2, 28, { align: 'center' });
   
   // Member Details
   doc.setFontSize(14);
   doc.setFont('helvetica', 'bold');
   doc.text('Meal Details', 14, 40);
   
-  doc.autoTable({
+  autoTable(doc, {
     startY: 45,
     head: [['Item', 'Count/Amount']],
     body: [
@@ -155,12 +142,12 @@ export const generateMemberReportPDF = (
   });
   
   // Financial Details
-  const finY = doc.lastAutoTable.finalY + 10;
+  const finY = (doc as any).lastAutoTable.finalY + 10;
   doc.setFontSize(14);
   doc.setFont('helvetica', 'bold');
   doc.text('Financial Details', 14, finY);
   
-  doc.autoTable({
+  autoTable(doc, {
     startY: finY + 5,
     head: [['Item', 'Amount']],
     body: [
@@ -174,7 +161,7 @@ export const generateMemberReportPDF = (
   });
   
   // Summary Box
-  const sumY = doc.lastAutoTable.finalY + 15;
+  const sumY = (doc as any).lastAutoTable.finalY + 15;
   doc.setFillColor(member.balance >= 0 ? 220 : 254, member.balance >= 0 ? 252 : 226, member.balance >= 0 ? 231 : 226);
   doc.rect(14, sumY, pageWidth - 28, 25, 'F');
   
