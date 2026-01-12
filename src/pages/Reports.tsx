@@ -1,9 +1,20 @@
 import { useMeal } from '@/context/MealContext';
-import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus, Download, FileText, User, AlertTriangle } from 'lucide-react';
 import MemberMealsChart from '@/components/MemberMealsChart';
+import { Button } from '@/components/ui/button';
+import { generateTotalReportPDF, generateMemberReportPDF } from '@/utils/pdfGenerator';
+import { toast } from 'sonner';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
+} from '@/components/ui/dropdown-menu';
 
 export default function Reports() {
-  const { getMonthlyStats, getMemberSummaries } = useMeal();
+  const { getMonthlyStats, getMemberSummaries, members } = useMeal();
   const monthlyStats = getMonthlyStats();
   const summaries = getMemberSummaries();
 
@@ -30,9 +41,97 @@ export default function Reports() {
     .filter(s => s.balance < 0)
     .reduce((sum, s) => sum + Math.abs(s.balance), 0);
 
+  // Members with balance less than -50
+  const criticalBalanceMembers = summaries.filter(s => s.balance < -50);
+
+  const handleDownloadTotalReport = () => {
+    try {
+      generateTotalReportPDF(monthlyStats, summaries, totalPositiveBalance, totalNegativeBalance);
+      toast.success('সম্পূর্ণ রিপোর্ট ডাউনলোড হয়েছে!');
+    } catch (error) {
+      toast.error('রিপোর্ট ডাউনলোড করতে সমস্যা হয়েছে');
+      console.error('PDF generation error:', error);
+    }
+  };
+
+  const handleDownloadMemberReport = (memberId: string) => {
+    const member = summaries.find(s => s.memberId === memberId);
+    if (member) {
+      try {
+        generateMemberReportPDF(member, monthlyStats);
+        toast.success(`${member.name} এর রিপোর্ট ডাউনলোড হয়েছে!`);
+      } catch (error) {
+        toast.error('রিপোর্ট ডাউনলোড করতে সমস্যা হয়েছে');
+        console.error('PDF generation error:', error);
+      }
+    }
+  };
+
   return (
     <div>
-      <h1 className="page-title">সর্বমোট রিপোর্ট</h1>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+        <h1 className="page-title mb-0">সর্বমোট রিপোর্ট</h1>
+        
+        {/* PDF Download Buttons */}
+        <div className="flex gap-2">
+          <Button 
+            onClick={handleDownloadTotalReport}
+            className="gap-2"
+            variant="default"
+          >
+            <Download size={16} />
+            সম্পূর্ণ রিপোর্ট
+          </Button>
+          
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="gap-2">
+                <User size={16} />
+                সদস্য রিপোর্ট
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56 bg-popover">
+              <DropdownMenuLabel>সদস্য নির্বাচন করুন</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {summaries.map(summary => (
+                <DropdownMenuItem 
+                  key={summary.memberId}
+                  onClick={() => handleDownloadMemberReport(summary.memberId)}
+                  className="cursor-pointer"
+                >
+                  <FileText className="mr-2 h-4 w-4" />
+                  {summary.name}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </div>
+
+      {/* Critical Balance Alert */}
+      {criticalBalanceMembers.length > 0 && (
+        <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-4 mb-6">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="text-destructive mt-0.5" size={20} />
+            <div>
+              <h3 className="font-semibold text-destructive mb-2">
+                ⚠️ সতর্কতা: {toBengaliNumber(criticalBalanceMembers.length)} জন সদস্যের ব্যালেন্স -৫০৳ এর বেশি বাকি
+              </h3>
+              <div className="space-y-1">
+                {criticalBalanceMembers.map(member => (
+                  <div key={member.memberId} className="flex items-center justify-between text-sm bg-destructive/5 rounded px-3 py-2">
+                    <span className="font-medium">{member.name}</span>
+                    <span className="text-destructive font-bold">{formatTaka(member.balance)}</span>
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                এই সদস্যদের ইমেইল/SMS নোটিফিকেশন পাঠাতে সেটিংস থেকে কনফিগার করুন।
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Member Meals Chart */}
       <MemberMealsChart />
@@ -104,18 +203,21 @@ export default function Reports() {
 
       {/* Member Summaries */}
       <div className="bg-card rounded-lg border border-border overflow-hidden">
-        <div className="p-4 border-b border-border">
-          <h2 className="text-lg font-semibold">সদস্যভিত্তিক হিসাব</h2>
-          <p className="text-sm text-muted-foreground mt-1">প্রতি সদস্যের মিল, খরচ ও ব্যালেন্স</p>
+        <div className="p-4 border-b border-border flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-semibold">সদস্যভিত্তিক হিসাব</h2>
+            <p className="text-sm text-muted-foreground mt-1">প্রতি সদস্যের মিল, খরচ ও ব্যালেন্স</p>
+          </div>
         </div>
         
         {/* Table Header - Desktop */}
-        <div className="hidden lg:grid lg:grid-cols-8 gap-2 p-4 bg-muted text-sm font-semibold text-muted-foreground">
+        <div className="hidden lg:grid lg:grid-cols-7 gap-2 p-4 bg-muted text-sm font-semibold text-muted-foreground">
           <div className="col-span-2">নাম</div>
           <div className="text-center">মোট মিল</div>
           <div className="text-right">খরচ</div>
           <div className="text-right">জমা</div>
           <div className="text-right">ব্যালেন্স</div>
+          <div className="text-center">PDF</div>
         </div>
 
         <div className="divide-y divide-border">
@@ -127,7 +229,12 @@ export default function Reports() {
                 {/* Mobile Layout */}
                 <div className="lg:hidden">
                   <div className="flex justify-between items-start mb-3">
-                    <p className="font-semibold text-lg">{summary.name}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="font-semibold text-lg">{summary.name}</p>
+                      {summary.balance < -50 && (
+                        <AlertTriangle className="text-destructive" size={16} />
+                      )}
+                    </div>
                     <div className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium ${
                       summary.balance > 0 
                         ? 'bg-success/10 text-success' 
@@ -146,7 +253,7 @@ export default function Reports() {
                       <span className="ml-1">{formatTaka(summary.balance)}</span>
                     </div>
                   </div>
-                  <div className="grid grid-cols-4 gap-2 text-center">
+                  <div className="grid grid-cols-4 gap-2 text-center mb-3">
                     <div className="bg-primary/10 rounded-lg p-2">
                       <p className="text-lg font-bold text-primary">{summary.totalMeals}</p>
                       <p className="text-xs text-muted-foreground">মোট মিল</p>
@@ -166,11 +273,25 @@ export default function Reports() {
                       <p className="text-xs text-muted-foreground">ব্যালেন্স</p>
                     </div>
                   </div>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="w-full gap-2"
+                    onClick={() => handleDownloadMemberReport(summary.memberId)}
+                  >
+                    <Download size={14} />
+                    PDF ডাউনলোড
+                  </Button>
                 </div>
 
                 {/* Desktop Layout */}
-                <div className="hidden lg:grid lg:grid-cols-6 gap-2 items-center">
-                  <div className="col-span-2 font-medium">{summary.name}</div>
+                <div className="hidden lg:grid lg:grid-cols-7 gap-2 items-center">
+                  <div className="col-span-2 font-medium flex items-center gap-2">
+                    {summary.name}
+                    {summary.balance < -50 && (
+                      <AlertTriangle className="text-destructive" size={16} />
+                    )}
+                  </div>
                   <div className="text-center font-semibold text-primary">{summary.totalMeals}</div>
                   <div className="text-right text-warning">{formatTaka(summary.totalCost)}</div>
                   <div className="text-right text-success">{formatTaka(summary.totalDeposit)}</div>
@@ -188,6 +309,15 @@ export default function Reports() {
                     ) : null}
                     {summary.balance > 0 ? '+' : ''}{formatTaka(summary.balance)}
                   </div>
+                  <div className="text-center">
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => handleDownloadMemberReport(summary.memberId)}
+                    >
+                      <Download size={16} />
+                    </Button>
+                  </div>
                 </div>
               </div>
             ))
@@ -204,6 +334,10 @@ export default function Reports() {
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded-full bg-destructive"></div>
               <span className="text-muted-foreground">দেবে (বাকি আছে)</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="text-destructive" size={14} />
+              <span className="text-muted-foreground">৫০৳+ বাকি আছে</span>
             </div>
           </div>
         </div>
